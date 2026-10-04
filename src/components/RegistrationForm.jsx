@@ -77,12 +77,12 @@ export default function RegistrationForm({
   // 1. Individual registration: 1 person = ₹100
   // 2. Normal team/group registration: Each participant costs ₹100 (2 = ₹200, 3 = ₹300, 4 = ₹400)
   // 3. Special event pricing:
-  //    - E-Sports: ₹400 per 4-member team
+  //    - E-Sports: ₹400 per 4-member team + ₹50 additional charge = ₹450 total
   //    - Project Expo: ₹200 per 2-member team
   //    - Stall: ₹150 (separate optional add-on)
   //    - Food: ₹0 (complimentary)
   // 4. Avoid duplicate charging:
-  //    - E-Sports must remain ₹400 total, not ₹100 × 4 + ₹400
+  //    - E-Sports must remain ₹450 total (₹400 team + ₹50 charge), not ₹100 × 4 + ₹450
   //    - Project Expo must remain ₹200 total, not ₹100 × 2 + ₹200
   //    - Stall adds ₹150 separately
   const feeBreakdown = (() => {
@@ -90,7 +90,9 @@ export default function RegistrationForm({
     let normalLabel = '';
     let hasNormalFee = false;
 
-    const esportsFee = isEsportsSelected ? 400 : 0;
+    const esportsTeamFee = isEsportsSelected ? 400 : 0;
+    const esportsCharge = isEsportsSelected ? 50 : 0;
+    const esportsFee = isEsportsSelected ? 450 : 0;
     const projectExpoFee = isProjectExpoSelected ? 200 : 0;
     const stallFee = formData.bookStall ? 150 : 0;
 
@@ -104,7 +106,7 @@ export default function RegistrationForm({
         normalLabel = `Team Registration (${participantCount} Members @ ₹100 each)`;
       }
     } else {
-      // Special events are selected. E-Sports is ₹400 total, Project Expo is ₹200 total.
+      // Special events are selected. E-Sports is ₹450 total (₹400 team + ₹50 charge), Project Expo is ₹200 total.
       // Normal fee is set to 0 to prevent duplicate charging.
       hasNormalFee = false;
       normalFee = 0;
@@ -123,6 +125,8 @@ export default function RegistrationForm({
       hasProjectExpo: isProjectExpoSelected,
       projectExpoFee,
       hasEsports: isEsportsSelected,
+      esportsTeamFee,
+      esportsCharge,
       esportsFee,
       hasStall: formData.bookStall,
       stallFee,
@@ -959,7 +963,7 @@ export default function RegistrationForm({
                             <Gamepad2 className="w-4 h-4" />
                             <span>E-Sports</span>
                           </span>
-                          <span className="text-sm font-black font-tech text-cyber-purple">₹400 / team</span>
+                          <span className="text-sm font-black font-tech text-cyber-purple">₹450 / team</span>
                         </div>
                         <div className="flex flex-wrap gap-1.5 mb-2">
                           <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyber-purple/20 text-purple-300 border border-cyber-purple/40 font-semibold">
@@ -971,7 +975,7 @@ export default function RegistrationForm({
                           </span>
                         </div>
                         <p className="text-[11px] text-slate-400 font-mono leading-relaxed">
-                          Competitive Free Fire BR arena tournament. Requires exactly 4 registered players (₹400 total).
+                          Competitive Free Fire BR arena tournament. Requires exactly 4 registered players (₹400 team + ₹50 charge).
                         </p>
                       </div>
 
@@ -1151,7 +1155,7 @@ export default function RegistrationForm({
                               <p className="text-xs font-bold font-tech truncate">{ev.name}</p>
                               {isEsports && (
                                 <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-cyber-purple/20 text-purple-300 border border-cyber-purple/40">
-                                  ₹400
+                                  ₹450
                                 </span>
                               )}
                             </div>

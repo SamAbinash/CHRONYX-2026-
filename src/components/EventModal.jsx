@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   X, Clock, ArrowRight, BookOpen, FileText, Award,
   Terminal, Database, ScanFace, Cpu, Sparkles, Binary, SearchCode, Eye, Brain, Gamepad2
@@ -138,119 +138,164 @@ export default function EventModal({ event, onClose, onRegisterEvent }) {
     );
   };
 
+  // Lock background page scroll while modal is active and allow escape key exit
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    const originalTouchAction = document.body.style.touchAction;
+
+    document.body.style.overflow = 'hidden';
+    document.body.style.touchAction = 'none';
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.style.touchAction = originalTouchAction;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onClose]);
+
+  const scrollContainerRef = useRef(null);
+
+  const handleDialogWheel = (e) => {
+    // If scrolling on header or footer, forward the scroll to the scrollable content area
+    if (scrollContainerRef.current && !scrollContainerRef.current.contains(e.target)) {
+      scrollContainerRef.current.scrollTop += e.deltaY;
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto bg-space-950/85 backdrop-blur-md animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-space-950/85 backdrop-blur-md animate-fade-in overscroll-none">
 
       {/* Modal Backdrop click */}
-      <div className="fixed inset-0" onClick={onClose}></div>
+      <div className="fixed inset-0" onClick={onClose} aria-hidden="true" />
 
       {/* Modal Dialog Box */}
-      <div className="relative w-full max-w-lg bg-space-950/95 border border-cyber-cyan/40 rounded-3xl p-6 sm:p-8 shadow-[0_0_60px_rgba(0,240,255,0.25)] z-10 max-h-[90vh] overflow-y-auto hud-scanline">
+      <div
+        className="relative w-full max-w-lg max-h-[88vh] bg-space-950/95 border border-cyber-cyan/40 rounded-3xl shadow-[0_0_60px_rgba(0,240,255,0.25)] z-10 flex flex-col overflow-hidden hud-scanline overscroll-contain"
+        onClick={(e) => e.stopPropagation()}
+        onWheel={handleDialogWheel}
+      >
 
         {/* 4-Corner HUD circuit brackets */}
-        <div className="absolute top-2.5 left-2.5 w-3.5 h-3.5 border-t-2 border-l-2 border-cyber-cyan pointer-events-none"></div>
-        <div className="absolute top-2.5 right-2.5 w-3.5 h-3.5 border-t-2 border-r-2 border-cyber-cyan pointer-events-none"></div>
-        <div className="absolute bottom-2.5 left-2.5 w-3.5 h-3.5 border-b-2 border-l-2 border-cyber-cyan pointer-events-none"></div>
-        <div className="absolute bottom-2.5 right-2.5 w-3.5 h-3.5 border-b-2 border-r-2 border-cyber-cyan pointer-events-none"></div>
+        <div className="absolute top-2.5 left-2.5 w-3.5 h-3.5 border-t-2 border-l-2 border-cyber-cyan pointer-events-none z-20" />
+        <div className="absolute top-2.5 right-2.5 w-3.5 h-3.5 border-t-2 border-r-2 border-cyber-cyan pointer-events-none z-20" />
+        <div className="absolute bottom-2.5 left-2.5 w-3.5 h-3.5 border-b-2 border-l-2 border-cyber-cyan pointer-events-none z-20" />
+        <div className="absolute bottom-2.5 right-2.5 w-3.5 h-3.5 border-b-2 border-r-2 border-cyber-cyan pointer-events-none z-20" />
 
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-space-800 transition-colors z-20"
-          aria-label="Close modal"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        {/* Modal Header (Fixed / Non-scrolling) */}
+        <div className="p-6 sm:p-7 pb-4 shrink-0 border-b border-slate-800/80 bg-space-950/90 relative z-10">
+          {/* Close Button */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-space-800 transition-colors z-20"
+            aria-label="Close modal"
+          >
+            <X className="w-5 h-5" />
+          </button>
 
-        {/* HUD Mission Console Status Tag */}
-        <div className="flex items-center justify-between text-[10px] font-mono text-cyber-cyan/80 pb-3 mb-5 border-b border-cyber-cyan/20 pr-8">
-          <div className="flex items-center space-x-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span className="tracking-wider">CONSOLE // SEC-07 // EVENT_INITIALIZED</span>
-          </div>
-          <span className="text-slate-500 font-mono text-[9px]">ID: {event.id || 'EVT'}</span>
-        </div>
-
-        {/* Modal Header with Icon, Category Badge & Name */}
-        <div className="flex items-start space-x-3 sm:space-x-4 pr-8 mb-6">
-          <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border ${
-            isTechnical
-              ? 'bg-cyber-cyan/15 text-cyber-cyan border-cyber-cyan/35 shadow-[0_0_15px_rgba(0,240,255,0.2)]'
-              : 'bg-cyber-purple/15 text-cyber-purple border-cyber-purple/35 shadow-[0_0_15px_rgba(168,85,247,0.2)]'
-          }`}>
-            <IconComponent className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="flex items-center flex-wrap gap-1.5 mb-1.5">
-              <span className={`inline-block text-[11px] font-mono font-semibold px-3 py-1 rounded-full uppercase tracking-wider ${
-                isTechnical
-                  ? 'bg-cyber-cyan/15 text-cyber-cyan border border-cyber-cyan/30'
-                  : 'bg-cyber-purple/15 text-purple-300 border border-cyber-purple/30'
-              }`}>
-                {event.category} Event
-              </span>
-              {event.memberCount && (
-                <span className="inline-block text-[11px] font-mono font-semibold px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-space-950 border border-slate-700 text-slate-300">
-                  {event.memberCount}
-                </span>
-              )}
+          {/* HUD Mission Console Status Tag */}
+          <div className="flex items-center justify-between text-[10px] font-mono text-cyber-cyan/80 pb-3 mb-4 border-b border-cyber-cyan/20 pr-8">
+            <div className="flex items-center space-x-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="tracking-wider">CONSOLE // SEC-07 // EVENT_INITIALIZED</span>
             </div>
-            <h3 className="text-2xl sm:text-3xl font-black font-tech text-white">
-              {event.name}
-            </h3>
+            <span className="text-slate-500 font-mono text-[9px]">ID: {event.id || 'EVT'}</span>
+          </div>
+
+          {/* Modal Header with Icon, Category Badge & Name */}
+          <div className="flex items-start space-x-3 sm:space-x-4 pr-6">
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border ${
+              isTechnical
+                ? 'bg-cyber-cyan/15 text-cyber-cyan border-cyber-cyan/35 shadow-[0_0_15px_rgba(0,240,255,0.2)]'
+                : 'bg-cyber-purple/15 text-cyber-purple border-cyber-purple/35 shadow-[0_0_15px_rgba(168,85,247,0.2)]'
+            }`}>
+              <IconComponent className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center flex-wrap gap-1.5 mb-1.5">
+                <span className={`inline-block text-[11px] font-mono font-semibold px-3 py-1 rounded-full uppercase tracking-wider ${
+                  isTechnical
+                    ? 'bg-cyber-cyan/15 text-cyber-cyan border border-cyber-cyan/30'
+                    : 'bg-cyber-purple/15 text-purple-300 border border-cyber-purple/30'
+                }`}>
+                  {event.category} Event
+                </span>
+                {event.memberCount && (
+                  <span className="inline-block text-[11px] font-mono font-semibold px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-space-950 border border-slate-700 text-slate-300">
+                    {event.memberCount}
+                  </span>
+                )}
+              </div>
+              <h3 className="text-2xl sm:text-3xl font-black font-tech text-white leading-tight">
+                {event.name}
+              </h3>
+            </div>
           </div>
         </div>
 
-        {/* Event Verified Meta */}
-        <div className="grid grid-cols-3 gap-2 p-3 rounded-2xl bg-space-950 border border-slate-800/80 text-center mb-3 text-xs font-mono">
+        {/* Scrollable Event Content Area */}
+        <div
+          ref={scrollContainerRef}
+          className="flex-1 overflow-y-auto overscroll-contain p-6 sm:p-7 pt-4 space-y-6 touch-pan-y"
+          style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' }}
+        >
+          {/* Event Verified Meta */}
+          <div className="grid grid-cols-3 gap-2 p-3 rounded-2xl bg-space-950 border border-slate-800/80 text-center text-xs font-mono">
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase">Date</p>
+              <p className="font-bold text-white mt-0.5">10-10-2026</p>
+            </div>
+            <div className="border-x border-slate-800">
+              <p className="text-[10px] text-slate-400 uppercase">Starting Time</p>
+              <p className="font-bold text-cyber-cyan mt-0.5">9:00 A.M</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-slate-400 uppercase">Venue</p>
+              <p className="font-bold text-slate-200 mt-0.5 truncate">Campus</p>
+            </div>
+          </div>
+
+          {/* Provisions Badge Bar */}
+          <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+            <div className="p-2.5 rounded-xl bg-space-950 border border-cyber-cyan/30 text-center flex items-center justify-center space-x-1.5">
+              <Award className="w-3.5 h-3.5 text-cyber-cyan shrink-0" />
+              <span className="text-cyber-cyan font-bold">Certificate Provided</span>
+            </div>
+            <div className="p-2.5 rounded-xl bg-space-950 border border-cyber-purple/30 text-center flex items-center justify-center space-x-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+              <span className="text-purple-300 font-bold">Food Provided</span>
+            </div>
+          </div>
+
+          {/* Short Description */}
           <div>
-            <p className="text-[10px] text-slate-400 uppercase">Date</p>
-            <p className="font-bold text-white mt-0.5">10-10-2026</p>
+            <h4 className="text-xs font-mono uppercase tracking-wider text-slate-400 mb-2 flex items-center">
+              <BookOpen className="w-3.5 h-3.5 mr-1.5 text-cyber-cyan" />
+              Description
+            </h4>
+            <p className="text-slate-300 text-sm leading-relaxed">
+              {event.shortDescription}
+            </p>
           </div>
-          <div className="border-x border-slate-800">
-            <p className="text-[10px] text-slate-400 uppercase">Starting Time</p>
-            <p className="font-bold text-cyber-cyan mt-0.5">9:00 A.M</p>
-          </div>
+
+          {/* Event Details Section */}
           <div>
-            <p className="text-[10px] text-slate-400 uppercase">Venue</p>
-            <p className="font-bold text-slate-200 mt-0.5 truncate">Campus</p>
+            <h4 className="text-xs font-mono uppercase tracking-wider text-slate-400 mb-2 flex items-center">
+              <FileText className="w-3.5 h-3.5 mr-1.5 text-cyber-cyan" />
+              Event Details
+            </h4>
+            {renderDetailsContent()}
           </div>
         </div>
 
-        {/* Provisions Badge Bar */}
-        <div className="grid grid-cols-2 gap-2 mb-6 text-xs font-mono">
-          <div className="p-2.5 rounded-xl bg-space-950 border border-cyber-cyan/30 text-center flex items-center justify-center space-x-1.5">
-            <Award className="w-3.5 h-3.5 text-cyber-cyan shrink-0" />
-            <span className="text-cyber-cyan font-bold">Certificate Provided</span>
-          </div>
-          <div className="p-2.5 rounded-xl bg-space-950 border border-cyber-purple/30 text-center flex items-center justify-center space-x-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-            <span className="text-purple-300 font-bold">Food Provided</span>
-          </div>
-        </div>
-
-        {/* Short Description */}
-        <div className="mb-6">
-          <h4 className="text-xs font-mono uppercase tracking-wider text-slate-400 mb-2 flex items-center">
-            <BookOpen className="w-3.5 h-3.5 mr-1.5 text-cyber-cyan" />
-            Description
-          </h4>
-          <p className="text-slate-300 text-sm leading-relaxed">
-            {event.shortDescription}
-          </p>
-        </div>
-
-        {/* Event Details Section */}
-        <div className="mb-6">
-          <h4 className="text-xs font-mono uppercase tracking-wider text-slate-400 mb-2 flex items-center">
-            <FileText className="w-3.5 h-3.5 mr-1.5 text-cyber-cyan" />
-            Event Details
-          </h4>
-          {renderDetailsContent()}
-        </div>
-
-        {/* Modal Actions */}
-        <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-800">
+        {/* Modal Actions (Fixed at bottom) */}
+        <div className="flex items-center justify-end space-x-3 p-4 sm:px-7 sm:py-4 border-t border-slate-800 bg-space-950/90 shrink-0 relative z-10">
           <button
             onClick={onClose}
             className="px-4 py-2.5 rounded-xl text-slate-400 hover:text-white text-xs font-mono transition-colors"

@@ -116,20 +116,29 @@ export default function PaymentSection({
             )}
 
             {feeBreakdown.hasEsports && (
-              <div className="flex items-center justify-between text-slate-300">
-                <span className="flex items-center space-x-2">
-                  <Gamepad2 className="w-3.5 h-3.5 text-cyber-purple shrink-0" />
-                  <span>E-Sports Tournament (₹400 / team of 4)</span>
-                </span>
-                <span className="font-bold text-cyber-purple">₹{feeBreakdown.esportsFee}</span>
-              </div>
+              <>
+                <div className="flex items-center justify-between text-slate-300">
+                  <span className="flex items-center space-x-2">
+                    <Gamepad2 className="w-3.5 h-3.5 text-cyber-purple shrink-0" />
+                    <span>E-Sports Team</span>
+                  </span>
+                  <span className="font-bold text-cyber-purple">₹{feeBreakdown.esportsTeamFee || 400}</span>
+                </div>
+                <div className="flex items-center justify-between text-slate-300">
+                  <span className="flex items-center space-x-2">
+                    <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0 text-amber-400 font-bold">•</span>
+                    <span>E-Sports Charge</span>
+                  </span>
+                  <span className="font-bold text-amber-400">₹{feeBreakdown.esportsCharge || 50}</span>
+                </div>
+              </>
             )}
 
             {feeBreakdown.hasStall && (
               <div className="flex items-center justify-between text-slate-300">
                 <span className="flex items-center space-x-2">
                   <Store className="w-3.5 h-3.5 text-cyber-cyan shrink-0" />
-                  <span>Stall Booking (Separate Optional Selection)</span>
+                  <span>Stall Booking</span>
                 </span>
                 <span className="font-bold text-cyber-cyan">₹{feeBreakdown.stallFee}</span>
               </div>
