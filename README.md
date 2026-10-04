@@ -54,7 +54,7 @@ The form is organized into clean, intuitive step sections:
    - Year of Study * (I, II, III, IV Year)
 2. **Event Selection:**
    - Categories: Technical & Non-Technical
-   - 9 Technical Events (Mystery Code, Datathon, DeepFake Detection, Project Expo, Vibe Coding, Spider Building, Tool Finder, Visual Cipher, Mind Matrix)
+   - Technical Events (Mystery Code, Datathon, DeepFake Detection, Project Expo, Vibe Coding, Tool Finder, Visual Cipher, Mind Matrix)
    - 1 Non-Technical Event (E-Sports)
    - Active event badge indicators with one-click remove option
    - **Team / Member Details:** Flexible member addition without invented size restrictions. Allows entering Team Name, adding individual teammates (Name, Email, Mobile), and providing flexible notes.

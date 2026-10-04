@@ -3,13 +3,14 @@ import confetti from 'canvas-confetti';
 import { EVENTS_DATA } from '../data/eventsData';
 import PaymentSection from './PaymentSection';
 import { createRegistration } from '../services/registrationService';
-import { 
-  Ticket, User, Layers, Users, Plus, Trash2, 
-  CheckCircle2, AlertCircle, ArrowRight, Printer, ArrowLeft, Clock 
+import {
+  Ticket, User, Layers, Users, Plus, Trash2,
+  CheckCircle2, AlertCircle, ArrowRight, Printer, ArrowLeft, Clock,
+  Store, Sparkles
 } from 'lucide-react';
 
-export default function RegistrationForm({ 
-  preSelectedEvent, 
+export default function RegistrationForm({
+  preSelectedEvent,
   onRegistrationSuccess,
   onNavigateHome,
   onNavigateStatus
@@ -22,8 +23,10 @@ export default function RegistrationForm({
     college: '',
     department: '',
     year: 'III Year',
+    registrationType: 'individual', // 'individual' or 'team'
     selectedCategory: 'all', // 'all', 'technical', 'non-technical'
     selectedEvents: [],
+    bookStall: false, // Optional Stall Booking (+₹150 / team)
     isTeam: false,
     teamName: '',
     teamMembers: [],
@@ -57,11 +60,50 @@ export default function RegistrationForm({
     }
   }, [preSelectedEvent]);
 
+  // Calculate dynamic fees based on official requirements
+  const feeBreakdown = (() => {
+    const hasEsports = formData.selectedEvents.some(e => e.toLowerCase() === 'e-sports');
+    const otherEvents = formData.selectedEvents.filter(e => e.toLowerCase() !== 'e-sports');
+    const hasOtherEvents = otherEvents.length > 0;
+    const isTeam = formData.registrationType === 'team';
+
+    let mainFee = 0;
+    let mainLabel = '';
+
+    // If symposium events selected, or default before event selection
+    if (hasOtherEvents || (!hasEsports && formData.selectedEvents.length === 0)) {
+      if (isTeam) {
+        mainFee = 350;
+        mainLabel = 'Team Registration (Max 4 members)';
+      } else {
+        mainFee = 100;
+        mainLabel = 'Individual Registration (1 person)';
+      }
+    }
+
+    const esportsFee = hasEsports ? 50 : 0;
+    const stallFee = formData.bookStall ? 150 : 0;
+    const total = mainFee + esportsFee + stallFee;
+
+    return {
+      registrationType: formData.registrationType,
+      isTeam,
+      hasOtherEvents,
+      hasEsports,
+      mainFee,
+      mainLabel,
+      esportsFee,
+      hasStall: formData.bookStall,
+      stallFee,
+      total
+    };
+  })();
+
   // Event selection toggle
   const toggleEvent = (eventName) => {
     setFormData(prev => {
       const exists = prev.selectedEvents.includes(eventName);
-      const updated = exists 
+      const updated = exists
         ? prev.selectedEvents.filter(e => e !== eventName)
         : [...prev.selectedEvents, eventName];
       return { ...prev, selectedEvents: updated };
@@ -71,13 +113,34 @@ export default function RegistrationForm({
     }
   };
 
-  // Team member handlers
+  // Switch Registration Type
+  const handleRegistrationTypeChange = (type) => {
+    setFormData(prev => ({
+      ...prev,
+      registrationType: type,
+      isTeam: type === 'team' || prev.teamMembers.length > 0 || prev.teamName.trim().length > 0
+    }));
+  };
+
+  // Team member handlers: 1 leader (primary) + up to 3 teammates = 4 members maximum
+  const MAX_ADDITIONAL_MEMBERS = 3;
+
   const handleAddMember = () => {
+    if (formData.teamMembers.length >= MAX_ADDITIONAL_MEMBERS) {
+      setErrors(prev => ({
+        ...prev,
+        teamMembers: 'Maximum 4 members allowed per team (1 Team Leader + 3 Teammates).'
+      }));
+      return;
+    }
     setFormData(prev => ({
       ...prev,
       isTeam: true,
       teamMembers: [...prev.teamMembers, { name: '', email: '', mobile: '' }]
     }));
+    if (errors.teamMembers) {
+      setErrors(prev => ({ ...prev, teamMembers: null }));
+    }
   };
 
   const handleMemberChange = (index, field, value) => {
@@ -88,11 +151,14 @@ export default function RegistrationForm({
 
   const handleRemoveMember = (index) => {
     const updated = formData.teamMembers.filter((_, i) => i !== index);
-    setFormData(prev => ({ 
-      ...prev, 
+    setFormData(prev => ({
+      ...prev,
       teamMembers: updated,
-      isTeam: updated.length > 0 || prev.teamName.trim().length > 0
+      isTeam: prev.registrationType === 'team' || updated.length > 0 || prev.teamName.trim().length > 0
     }));
+    if (errors.teamMembers) {
+      setErrors(prev => ({ ...prev, teamMembers: null }));
+    }
   };
 
   // Form Validation
@@ -126,6 +192,27 @@ export default function RegistrationForm({
 
     if (formData.selectedEvents.length === 0) {
       newErrors.selectedEvents = 'Please select at least one event.';
+    }
+
+    // Team Size Validation: max 4 members total (1 leader + 3 teammates)
+    if (formData.teamMembers.length > MAX_ADDITIONAL_MEMBERS) {
+      newErrors.teamMembers = 'Team size cannot exceed 4 members in total (1 Team Leader + 3 Teammates).';
+    }
+
+    // If Team Registration, ensure added teammate names are filled
+    if (formData.registrationType === 'team' && formData.teamMembers.length > 0) {
+      const hasEmptyName = formData.teamMembers.some(m => !m.name || !m.name.trim());
+      if (hasEmptyName) {
+        newErrors.teamMembers = 'Please enter names for all added teammates, or remove extra teammate slots.';
+      }
+    }
+
+    // E-Sports requires 4 players total (1 leader + 3 teammates)
+    const hasEsports = formData.selectedEvents.some(e => e.toLowerCase() === 'e-sports');
+    if (hasEsports) {
+      if (formData.teamMembers.length < 3) {
+        newErrors.teamMembers = 'E-Sports tournament requires a team of 4 players (1 Team Leader + 3 Teammates). Please add all 3 teammate details.';
+      }
     }
 
     if (!utrNumber.trim() || utrNumber.length < 6) {
@@ -169,7 +256,10 @@ export default function RegistrationForm({
         teamMembers: formData.teamMembers.filter(m => m.name && m.name.trim() !== ''),
         flexibleMemberDetails: formData.flexibleMemberDetails,
         utr: utrNumber,
-        screenshotFile: paymentScreenshot
+        screenshotFile: paymentScreenshot,
+        amount: feeBreakdown.total,
+        registrationType: formData.registrationType,
+        bookStall: formData.bookStall
       });
 
       // Trigger celebration confetti
@@ -206,8 +296,10 @@ export default function RegistrationForm({
       college: '',
       department: '',
       year: 'III Year',
+      registrationType: 'individual',
       selectedCategory: 'all',
       selectedEvents: [],
+      bookStall: false,
       isTeam: false,
       teamName: '',
       teamMembers: [],
@@ -226,76 +318,85 @@ export default function RegistrationForm({
   // Filter events for selection step
   const technicalEvents = EVENTS_DATA.filter(e => e.category === 'Technical');
   const nonTechnicalEvents = EVENTS_DATA.filter(e => e.category === 'Non-Technical');
+  const hasEsportsSelected = formData.selectedEvents.some(e => e.toLowerCase() === 'e-sports');
+  const showTeamSection = formData.registrationType === 'team' || hasEsportsSelected;
 
   return (
-    <section id="register" className="relative py-24 bg-space-950">
-      
-      {/* Background Ambience */}
+    <section id="register" className="relative py-24 bg-space-950 overflow-hidden">
+
+      {/* Background Cyber Accents */}
       <div className="absolute inset-0 bg-grid-cyber pointer-events-none opacity-20"></div>
-      <div className="absolute top-1/4 right-0 w-96 h-96 bg-cyber-cyan/10 rounded-full blur-[140px] pointer-events-none"></div>
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyber-cyan/10 rounded-full blur-[140px] pointer-events-none"></div>
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyber-purple/10 rounded-full blur-[140px] pointer-events-none"></div>
 
       <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-12">
           <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full cyber-glass border border-cyber-cyan/30 text-cyber-cyan text-xs font-mono uppercase tracking-widest mb-4">
             <Ticket className="w-3.5 h-3.5" />
-            <span>Registration Portal</span>
+            <span>Official Portal</span>
           </div>
 
           <h2 className="text-3xl sm:text-5xl font-black font-tech tracking-tight text-white mb-4 uppercase">
-            REGISTER FOR <span className="cyber-gradient-text">THE FUTURE</span>
+            CHRONYX <span className="cyber-gradient-text">REGISTRATION</span>
           </h2>
 
-          <p className="text-slate-400 text-sm sm:text-base">
-            Department of Artificial Intelligence and Data Science • Jaya Sakthi Engineering College
+          <p className="text-slate-400 text-xs sm:text-sm font-mono">
+            Register your pass for the AI & Data Science Symposium on <strong>10-10-2026</strong>.
           </p>
         </div>
 
-        {/* Condition: Show Success Screen vs. Registration Form */}
+        {/* Global Error Banner */}
+        {errors.form && (
+          <div className="mb-8 p-4 rounded-2xl bg-rose-500/15 border border-rose-500/40 text-rose-300 text-xs sm:text-sm font-mono flex items-start space-x-3">
+            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+            <span>{errors.form}</span>
+          </div>
+        )}
+
+        {/* ================================================================ */}
+        {/* REGISTRATION CONFIRMATION SCREEN (When submitted)                */}
+        {/* ================================================================ */}
         {submittedData ? (
-          
-          /* ================================================================ */
-          /* SUCCESS SCREEN                                                   */
-          /* ================================================================ */
-          <div className="cyber-glass rounded-3xl p-6 sm:p-10 border border-emerald-500/40 shadow-[0_0_50px_rgba(16,185,129,0.2)] text-center relative overflow-hidden animate-fade-in print:bg-white print:text-black print:border-none print:shadow-none">
-            
-            <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center mx-auto mb-5 shadow-[0_0_25px_rgba(16,185,129,0.3)]">
-              <CheckCircle2 className="w-8 h-8" />
+          <div className="cyber-glass rounded-3xl p-6 sm:p-10 border border-cyber-cyan/40 shadow-[0_0_50px_rgba(0,240,255,0.2)] text-center animate-fade-in relative overflow-hidden">
+
+            <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center mx-auto mb-4 shadow-[0_0_20px_rgba(16,185,129,0.3)]">
+              <CheckCircle2 className="w-10 h-10" />
             </div>
 
-            <h3 className="text-2xl sm:text-4xl font-black font-tech text-white uppercase tracking-wider mb-2 print:text-black">
-              REGISTRATION SUBMITTED
+            <span className="inline-block text-[11px] font-mono text-cyber-cyan uppercase tracking-widest mb-1 font-bold">
+              Registration Received
+            </span>
+
+            <h3 className="text-2xl sm:text-3xl font-black font-tech text-white uppercase tracking-wider mb-2">
+              Registration Pass Generated
             </h3>
 
-            <p className="text-slate-300 text-sm sm:text-base max-w-md mx-auto mb-8 print:text-gray-700">
-              Your CHRONYX 2026 registration has been submitted successfully.
+            <p className="text-slate-300 text-xs sm:text-sm max-w-lg mx-auto font-mono mb-6">
+              Your registration has been recorded successfully. Please save your unique Registration ID for status verification.
             </p>
 
-            {/* Registration Details Card */}
-            <div className="p-6 rounded-2xl bg-space-950/90 border border-slate-800 max-w-xl mx-auto text-left space-y-4 mb-8 print:bg-white print:border-2 print:border-black print:text-black">
-              
-              {/* Registration ID Banner */}
-              <div className="flex flex-wrap items-center justify-between pb-4 border-b border-slate-800 print:border-black gap-2">
-                <div>
-                  <span className="text-[10px] font-mono uppercase text-slate-400 block print:text-gray-600">
-                    Registration ID
-                  </span>
-                  <span className="text-2xl sm:text-3xl font-black font-tech text-cyber-cyan tracking-wider print:text-black">
-                    {submittedData.regId}
-                  </span>
-                </div>
+            {/* Generated Unique ID Badge */}
+            <div className="inline-flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl bg-space-950 border border-cyber-cyan/50 shadow-[0_0_30px_rgba(0,240,255,0.2)] mb-8 min-w-[280px]">
+              <span className="text-[10px] font-mono uppercase text-slate-400 tracking-widest mb-1">
+                Unique Registration ID
+              </span>
+              <span className="text-2xl sm:text-3xl font-black font-tech text-cyber-cyan tracking-widest">
+                {submittedData.regId}
+              </span>
+              <span className="text-[10px] font-mono text-amber-300 mt-2 flex items-center space-x-1">
+                <Clock className="w-3 h-3 shrink-0" />
+                <span>Status: Payment Verification Pending</span>
+              </span>
+            </div>
 
-                {/* Status Badge */}
-                <div className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-400 text-xs font-mono font-semibold print:border-black print:text-black">
-                  <Clock className="w-3.5 h-3.5 animate-pulse" />
-                  <span>Payment Status: Verification Pending</span>
-                </div>
-              </div>
+            {/* Registration Summary Card (Printable) */}
+            <div className="p-5 sm:p-6 rounded-2xl bg-space-950/80 border border-slate-800 text-left space-y-3 mb-8 max-w-xl mx-auto print:border-black print:text-black">
 
               {/* Participant Name */}
-              <div>
-                <span className="text-[10px] font-mono uppercase text-slate-400 block print:text-gray-600">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-2 print:border-black">
+                <span className="text-xs font-mono text-slate-400 uppercase print:text-gray-600">
                   Participant Name
                 </span>
                 <span className="text-base sm:text-lg font-bold text-white print:text-black font-tech">
@@ -315,6 +416,28 @@ export default function RegistrationForm({
                 </div>
               </div>
 
+              {/* Registration Type & Fee Paid */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono pt-2 border-t border-slate-800 print:border-black">
+                <div>
+                  <span className="text-slate-400 block print:text-gray-600">Registration Type</span>
+                  <span className="text-cyber-cyan font-bold capitalize print:text-black">
+                    {submittedData.registration_type === 'team' ? 'Team (Max 4)' : 'Individual'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block print:text-gray-600">Stall Booking</span>
+                  <span className="text-slate-200 font-semibold print:text-black">
+                    {submittedData.stall_booking ? 'Yes (₹150)' : 'No'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block print:text-gray-600">Amount Paid</span>
+                  <span className="text-white font-bold text-sm print:text-black">
+                    ₹{submittedData.amount || 0}
+                  </span>
+                </div>
+              </div>
+
               {/* Selected Events */}
               <div>
                 <span className="text-[10px] font-mono uppercase text-slate-400 block mb-1.5 print:text-gray-600">
@@ -322,8 +445,8 @@ export default function RegistrationForm({
                 </span>
                 <div className="flex flex-wrap gap-1.5">
                   {submittedData.events.map((ev, i) => (
-                    <span 
-                      key={i} 
+                    <span
+                      key={i}
                       className="px-2.5 py-1 rounded-lg bg-cyber-cyan/10 border border-cyber-cyan/30 text-cyber-cyan text-xs font-mono font-semibold print:border-black print:text-black"
                     >
                       {ev}
@@ -393,9 +516,9 @@ export default function RegistrationForm({
           /* REGISTRATION FORM                                                */
           /* ================================================================ */
           <div className="cyber-glass rounded-3xl p-6 sm:p-10 border border-cyber-cyan/30 shadow-[0_0_50px_rgba(0,240,255,0.15)] relative">
-            
+
             <form onSubmit={handleSubmit} className="space-y-8">
-              
+
               {/* STEP 1: PARTICIPANT DETAILS */}
               <div>
                 <div className="flex items-center space-x-2 mb-4 pb-2 border-b border-slate-800">
@@ -406,7 +529,7 @@ export default function RegistrationForm({
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  
+
                   {/* Full Name */}
                   <div>
                     <label className="block text-xs font-mono font-semibold uppercase text-slate-300 mb-1.5">
@@ -431,12 +554,12 @@ export default function RegistrationForm({
                   {/* Email */}
                   <div>
                     <label className="block text-xs font-mono font-semibold uppercase text-slate-300 mb-1.5">
-                      Email <span className="text-rose-400">*</span>
+                      Email Address <span className="text-rose-400">*</span>
                     </label>
                     <input
                       type="email"
                       required
-                      placeholder="Enter email address"
+                      placeholder="name@example.com"
                       value={formData.email}
                       onChange={(e) => {
                         setFormData({ ...formData, email: e.target.value });
@@ -449,7 +572,7 @@ export default function RegistrationForm({
                     {errors.email && <p className="text-rose-400 text-xs font-mono mt-1">{errors.email}</p>}
                   </div>
 
-                  {/* Mobile / WhatsApp Number */}
+                  {/* Mobile */}
                   <div>
                     <label className="block text-xs font-mono font-semibold uppercase text-slate-300 mb-1.5">
                       Mobile / WhatsApp Number <span className="text-rose-400">*</span>
@@ -461,7 +584,8 @@ export default function RegistrationForm({
                       placeholder="10-digit mobile number"
                       value={formData.mobile}
                       onChange={(e) => {
-                        setFormData({ ...formData, mobile: e.target.value.replace(/\D/g, '') });
+                        const val = e.target.value.replace(/\D/g, '');
+                        setFormData({ ...formData, mobile: val });
                         if (errors.mobile) setErrors({ ...errors, mobile: null });
                       }}
                       className={`w-full bg-space-950 border rounded-xl px-4 py-2.5 text-sm text-white font-mono placeholder-slate-500 focus:outline-none focus:ring-1 transition-all ${
@@ -479,7 +603,7 @@ export default function RegistrationForm({
                     <select
                       value={formData.year}
                       onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                      className="w-full bg-space-950 border border-slate-800 focus:border-cyber-cyan focus:ring-1 focus:ring-cyber-cyan rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none transition-all"
+                      className="w-full bg-space-950 border border-slate-800 focus:border-cyber-cyan rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none"
                     >
                       <option value="I Year">I Year</option>
                       <option value="II Year">II Year</option>
@@ -488,7 +612,7 @@ export default function RegistrationForm({
                     </select>
                   </div>
 
-                  {/* College / Institution */}
+                  {/* College */}
                   <div>
                     <label className="block text-xs font-mono font-semibold uppercase text-slate-300 mb-1.5">
                       College / Institution <span className="text-rose-400">*</span>
@@ -496,7 +620,7 @@ export default function RegistrationForm({
                     <input
                       type="text"
                       required
-                      placeholder="Enter college or institution name"
+                      placeholder="Enter college name"
                       value={formData.college}
                       onChange={(e) => {
                         setFormData({ ...formData, college: e.target.value });
@@ -533,18 +657,72 @@ export default function RegistrationForm({
                 </div>
               </div>
 
-              {/* STEP 2: EVENT SELECTION */}
+              {/* STEP 2: REGISTRATION TYPE & EVENT SELECTION */}
               <div>
                 <div className="flex items-center justify-between pb-2 border-b border-slate-800 mb-4">
                   <div className="flex items-center space-x-2">
                     <Layers className="w-5 h-5 text-cyber-purple" />
                     <h3 className="font-tech text-base sm:text-lg font-bold text-white uppercase tracking-wider">
-                      2. Event Selection
+                      2. Registration Type & Event Selection
                     </h3>
                   </div>
                   <span className="text-xs font-mono text-cyber-cyan">
                     Selected: {formData.selectedEvents.length} Event(s)
                   </span>
+                </div>
+
+                {/* Registration Type Selector */}
+                <div className="mb-6">
+                  <span className="text-[11px] font-mono text-slate-300 uppercase font-bold tracking-wider block mb-2">
+                    Select Registration Type <span className="text-rose-400">*</span>
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+                    {/* Individual Registration */}
+                    <button
+                      type="button"
+                      onClick={() => handleRegistrationTypeChange('individual')}
+                      className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between ${
+                        formData.registrationType === 'individual'
+                          ? 'bg-cyber-cyan/15 border-cyber-cyan shadow-[0_0_20px_rgba(0,240,255,0.25)] text-white'
+                          : 'bg-space-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between w-full mb-1.5">
+                        <span className="text-xs font-mono uppercase font-bold text-cyber-cyan flex items-center space-x-1.5">
+                          <User className="w-4 h-4" />
+                          <span>Individual Registration</span>
+                        </span>
+                        <span className="text-sm font-black font-tech text-cyber-cyan">₹100 / person</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 font-mono">
+                        Standard individual pass for 1 person across symposium events.
+                      </p>
+                    </button>
+
+                    {/* Team Registration */}
+                    <button
+                      type="button"
+                      onClick={() => handleRegistrationTypeChange('team')}
+                      className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between ${
+                        formData.registrationType === 'team'
+                          ? 'bg-cyber-purple/20 border-cyber-purple shadow-[0_0_20px_rgba(168,85,247,0.3)] text-white'
+                          : 'bg-space-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between w-full mb-1.5">
+                        <span className="text-xs font-mono uppercase font-bold text-purple-300 flex items-center space-x-1.5">
+                          <Users className="w-4 h-4" />
+                          <span>Team Registration</span>
+                        </span>
+                        <span className="text-sm font-black font-tech text-purple-300">₹350 / team</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 font-mono">
+                        Maximum 4 members per team (1 Team Leader + up to 3 Teammates).
+                      </p>
+                    </button>
+
+                  </div>
                 </div>
 
                 {errors.selectedEvents && (
@@ -588,30 +766,44 @@ export default function RegistrationForm({
                   </div>
                 </div>
 
-                {/* Non-Technical Event */}
+                {/* Non-Technical Event (E-Sports) */}
                 <div className="mb-6">
                   <span className="text-[11px] font-mono text-cyber-purple uppercase font-bold tracking-wider block mb-2">
                     Non-Technical Event
                   </span>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div className="grid grid-cols-1 gap-2.5">
                     {nonTechnicalEvents.map(ev => {
                       const isSelected = formData.selectedEvents.includes(ev.name);
+                      const isEsports = ev.id === 'e-sports' || ev.name.toLowerCase().includes('e-sports');
                       return (
                         <button
                           type="button"
                           key={ev.id}
                           onClick={() => toggleEvent(ev.name)}
-                          className={`p-3 rounded-xl text-left border transition-all flex items-center justify-between ${
+                          className={`p-3.5 rounded-xl text-left border transition-all flex items-start justify-between ${
                             isSelected
                               ? 'bg-cyber-purple/20 border-cyber-purple shadow-[0_0_15px_rgba(168,85,247,0.3)] text-white'
                               : 'bg-space-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
                           }`}
                         >
                           <div className="overflow-hidden pr-2">
-                            <p className="text-xs font-bold font-tech truncate">{ev.name}</p>
-                            <p className="text-[10px] text-purple-300 font-mono">Non-Technical</p>
+                            <div className="flex items-center space-x-2 flex-wrap gap-1">
+                              <p className="text-xs font-bold font-tech">{ev.name}</p>
+                              {isEsports && (
+                                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                                  ₹50 / team
+                                </span>
+                              )}
+                              {isEsports && (
+                                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center space-x-1">
+                                  <Sparkles className="w-3 h-3 text-amber-300" />
+                                  <span>Cash Prizes Available</span>
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-purple-300 font-mono mt-1">Non-Technical Event • Team size: 4 players</p>
                           </div>
-                          <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border ${
+                          <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border mt-0.5 ${
                             isSelected ? 'bg-cyber-purple border-cyber-purple text-space-950' : 'border-slate-700'
                           }`}>
                             {isSelected && <CheckCircle2 className="w-4 h-4" />}
@@ -622,132 +814,207 @@ export default function RegistrationForm({
                   </div>
                 </div>
 
-                {/* After selecting an event: Show Selected Event Summary & Flexible Team/Member Details */}
+                {/* Stall Booking Addon Box (Separate Optional Selection: ₹150 / team) */}
+                <div className="mb-6 p-4 rounded-2xl bg-space-950/90 border border-cyber-cyan/30 hover:border-cyber-cyan/50 transition-all">
+                  <label className="flex items-start space-x-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.bookStall}
+                      onChange={(e) => setFormData({ ...formData, bookStall: e.target.checked })}
+                      className="w-4 h-4 mt-1 rounded bg-space-900 border-slate-700 text-cyber-cyan focus:ring-cyber-cyan focus:ring-offset-space-950 cursor-pointer"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center space-x-2">
+                          <Store className="w-4 h-4 text-cyber-cyan" />
+                          <span className="text-xs font-mono font-bold uppercase text-white tracking-wider">
+                            Book a Project / Product Stall
+                          </span>
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyber-cyan/15 text-cyber-cyan border border-cyber-cyan/30">
+                            Separate Optional Selection
+                          </span>
+                        </div>
+                        <span className="text-xs sm:text-sm font-black font-tech text-cyber-cyan">
+                          ₹150 / team
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 font-mono mt-1 leading-relaxed">
+                        Dedicated stall at the campus venue. Stall payment is completely separate from the main registration fee (not included in the ₹350 team registration fee).
+                      </p>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Selected Events Summary */}
                 {formData.selectedEvents.length > 0 && (
-                  <div className="p-5 rounded-2xl bg-space-950/80 border border-slate-800 space-y-4">
-                    
-                    {/* Selected Event Display */}
-                    <div>
-                      <span className="text-xs font-mono uppercase text-slate-400 font-semibold block mb-1.5">
-                        Selected Event(s)
-                      </span>
-                      <div className="flex flex-wrap gap-2">
-                        {formData.selectedEvents.map((eventName, idx) => (
-                          <div 
-                            key={idx} 
-                            className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-lg bg-cyber-cyan/10 border border-cyber-cyan/30 text-cyber-cyan text-xs font-mono font-semibold"
+                  <div className="p-4 rounded-2xl bg-space-950/80 border border-slate-800 space-y-3 mb-6">
+                    <span className="text-xs font-mono uppercase text-slate-400 font-semibold block">
+                      Selected Event(s)
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {formData.selectedEvents.map((eventName, idx) => (
+                        <div
+                          key={idx}
+                          className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-lg bg-cyber-cyan/10 border border-cyber-cyan/30 text-cyber-cyan text-xs font-mono font-semibold"
+                        >
+                          <span>{eventName}</span>
+                          <button
+                            type="button"
+                            onClick={() => toggleEvent(eventName)}
+                            className="text-slate-400 hover:text-white p-0.5"
+                            title="Remove"
                           >
-                            <span>{eventName}</span>
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Team / Member Details (Shown for Team Registration or E-Sports) */}
+                {showTeamSection ? (
+                  <div className="p-5 rounded-2xl bg-space-950/80 border border-slate-800 space-y-4">
+
+                    <div className="flex items-center justify-between flex-wrap gap-2 mb-2 pb-2 border-b border-slate-800">
+                      <div>
+                        <span className="text-xs font-mono uppercase text-slate-200 font-bold flex items-center space-x-1.5">
+                          <Users className="w-4 h-4 text-cyber-cyan" />
+                          <span>Team Details (Maximum 4 Members)</span>
+                        </span>
+                        <p className="text-[11px] text-slate-400 font-mono mt-0.5">
+                          1 Team Leader + up to 3 Teammates (Total 4 members maximum).
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleAddMember}
+                        disabled={formData.teamMembers.length >= MAX_ADDITIONAL_MEMBERS}
+                        className="px-3 py-1.5 rounded-lg border border-dashed border-cyber-cyan/40 hover:border-cyber-cyan text-cyber-cyan text-xs font-mono flex items-center space-x-1 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>
+                          {formData.teamMembers.length >= MAX_ADDITIONAL_MEMBERS
+                            ? 'Max 4 Members Reached'
+                            : 'Add Teammate'}
+                        </span>
+                      </button>
+                    </div>
+
+                    {/* Member #1: Team Leader from Step 1 */}
+                    <div className="p-3 rounded-xl bg-space-900/80 border border-cyber-cyan/30 flex items-center justify-between text-xs font-mono">
+                      <div className="flex items-center space-x-2">
+                        <span className="px-2 py-0.5 rounded bg-cyber-cyan/20 text-cyber-cyan font-bold text-[10px] uppercase">
+                          Member #1 (Leader)
+                        </span>
+                        <span className="text-white font-semibold">
+                          {formData.fullName || 'Leader name entered in Step 1'}
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        {formData.mobile ? `+91 ${formData.mobile}` : 'Contact in Step 1'}
+                      </span>
+                    </div>
+
+                    {/* Optional Team Name */}
+                    <div>
+                      <label className="block text-[11px] font-mono text-slate-400 uppercase mb-1">
+                        Team Name (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Team Alpha / Neural Squad"
+                        value={formData.teamName}
+                        onChange={(e) => setFormData({ ...formData, teamName: e.target.value })}
+                        className="w-full bg-space-900 border border-slate-800 focus:border-cyber-cyan rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
+                      />
+                    </div>
+
+                    {/* Additional Teammate Input Fields (Members 2 to 4) */}
+                    {formData.teamMembers.length > 0 && (
+                      <div className="space-y-2.5">
+                        {formData.teamMembers.map((member, idx) => (
+                          <div key={idx} className="p-3 rounded-xl bg-space-900/60 border border-slate-800/80 flex flex-col sm:flex-row items-center gap-2">
+                            <span className="text-xs font-mono font-bold text-cyber-cyan shrink-0">
+                              Member #{idx + 2}
+                            </span>
+                            <input
+                              type="text"
+                              required
+                              placeholder="Member Full Name *"
+                              value={member.name}
+                              onChange={(e) => handleMemberChange(idx, 'name', e.target.value)}
+                              className="w-full sm:flex-1 bg-space-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500"
+                            />
+                            <input
+                              type="email"
+                              placeholder="Email (optional)"
+                              value={member.email}
+                              onChange={(e) => handleMemberChange(idx, 'email', e.target.value)}
+                              className="w-full sm:flex-1 bg-space-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500"
+                            />
+                            <input
+                              type="tel"
+                              maxLength={10}
+                              placeholder="Mobile (optional)"
+                              value={member.mobile}
+                              onChange={(e) => handleMemberChange(idx, 'mobile', e.target.value.replace(/\D/g, ''))}
+                              className="w-full sm:w-32 bg-space-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white font-mono placeholder-slate-500"
+                            />
                             <button
                               type="button"
-                              onClick={() => toggleEvent(eventName)}
-                              className="text-slate-400 hover:text-white p-0.5"
-                              title="Remove"
+                              onClick={() => handleRemoveMember(idx)}
+                              className="text-slate-500 hover:text-rose-400 p-1.5 shrink-0"
+                              title="Remove Teammate"
                             >
-                              ✕
+                              <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         ))}
                       </div>
+                    )}
+
+                    {errors.teamMembers && (
+                      <p className="text-rose-400 text-xs font-mono flex items-center">
+                        <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0" />
+                        <span>{errors.teamMembers}</span>
+                      </p>
+                    )}
+
+                    {/* Flexible Member Details Text Area */}
+                    <div>
+                      <label className="block text-[11px] font-mono text-slate-400 uppercase mb-1">
+                        Additional Member / Participation Notes (Flexible)
+                      </label>
+                      <textarea
+                        rows={2}
+                        placeholder="Provide any additional notes or team details here..."
+                        value={formData.flexibleMemberDetails}
+                        onChange={(e) => setFormData({ ...formData, flexibleMemberDetails: e.target.value })}
+                        className="w-full bg-space-900 border border-slate-800 focus:border-cyber-cyan rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none resize-none"
+                      ></textarea>
                     </div>
 
-                    {/* Team / Member Details (Flexible) */}
-                    <div className="pt-3 border-t border-slate-800/80">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-mono uppercase text-slate-300 font-semibold flex items-center space-x-1.5">
-                          <Users className="w-4 h-4 text-cyber-cyan" />
-                          <span>Team / Member Details</span>
-                        </span>
-
-                        <button
-                          type="button"
-                          onClick={handleAddMember}
-                          className="px-3 py-1 rounded-lg border border-dashed border-cyber-cyan/40 hover:border-cyber-cyan text-cyber-cyan text-xs font-mono flex items-center space-x-1 transition-colors"
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                          <span>Add Teammate</span>
-                        </button>
-                      </div>
-
-                      {/* Optional Team Name */}
-                      <div className="mb-3">
-                        <label className="block text-[11px] font-mono text-slate-400 uppercase mb-1">
-                          Team Name (Optional)
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="e.g. Team Alpha / Neural Squad"
-                          value={formData.teamName}
-                          onChange={(e) => setFormData({ ...formData, teamName: e.target.value })}
-                          className="w-full bg-space-900 border border-slate-800 focus:border-cyber-cyan rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
-                        />
-                      </div>
-
-                      {/* Dynamic Member Detail Fields */}
-                      {formData.teamMembers.length > 0 && (
-                        <div className="space-y-2 mb-3">
-                          {formData.teamMembers.map((member, idx) => (
-                            <div key={idx} className="p-3 rounded-xl bg-space-900/60 border border-slate-800/80 flex flex-col sm:flex-row items-center gap-2">
-                              <span className="text-xs font-mono font-bold text-cyber-cyan shrink-0">
-                                Member #{idx + 2}
-                              </span>
-                              <input
-                                type="text"
-                                placeholder="Member Full Name"
-                                value={member.name}
-                                onChange={(e) => handleMemberChange(idx, 'name', e.target.value)}
-                                className="w-full sm:flex-1 bg-space-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500"
-                              />
-                              <input
-                                type="email"
-                                placeholder="Email (optional)"
-                                value={member.email}
-                                onChange={(e) => handleMemberChange(idx, 'email', e.target.value)}
-                                className="w-full sm:flex-1 bg-space-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500"
-                              />
-                              <input
-                                type="tel"
-                                maxLength={10}
-                                placeholder="Mobile (optional)"
-                                value={member.mobile}
-                                onChange={(e) => handleMemberChange(idx, 'mobile', e.target.value.replace(/\D/g, ''))}
-                                className="w-full sm:w-32 bg-space-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white font-mono placeholder-slate-500"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveMember(idx)}
-                                className="text-slate-500 hover:text-rose-400 p-1.5 shrink-0"
-                                title="Remove"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Flexible Member Details Text Area */}
-                      <div>
-                        <label className="block text-[11px] font-mono text-slate-400 uppercase mb-1">
-                          Additional Member / Participation Notes (Flexible)
-                        </label>
-                        <textarea
-                          rows={2}
-                          placeholder="Provide any additional team member names, colleges, or participation details here..."
-                          value={formData.flexibleMemberDetails}
-                          onChange={(e) => setFormData({ ...formData, flexibleMemberDetails: e.target.value })}
-                          className="w-full bg-space-900 border border-slate-800 focus:border-cyber-cyan rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none resize-none"
-                        ></textarea>
-                      </div>
-
-                    </div>
-
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-2xl bg-space-950/60 border border-slate-800 text-slate-400 text-xs font-mono flex items-center justify-between">
+                    <span>
+                      Individual Registration selected: Pass issued for 1 person (Member #1).
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleRegistrationTypeChange('team')}
+                      className="text-cyber-cyan hover:underline ml-2 shrink-0 font-bold"
+                    >
+                      Switch to Team (₹350)
+                    </button>
                   </div>
                 )}
 
               </div>
 
-              {/* STEP 3: PAYMENT */}
+              {/* STEP 3: PAYMENT WITH LIVE FEE BREAKDOWN */}
               <PaymentSection
                 utrNumber={utrNumber}
                 setUtrNumber={setUtrNumber}
@@ -755,11 +1022,12 @@ export default function RegistrationForm({
                 setPaymentScreenshot={setPaymentScreenshot}
                 errors={errors}
                 setErrors={setErrors}
+                feeBreakdown={feeBreakdown}
               />
 
               {/* STEP 4: DECLARATION */}
               <div className="pt-4 border-t border-slate-800">
-                <label className="flex items-start space-x-3 cursor-pointer group select-none">
+                <label className="flex items-start space-x-3 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={formData.declarationConfirmed}
@@ -767,36 +1035,29 @@ export default function RegistrationForm({
                       setFormData({ ...formData, declarationConfirmed: e.target.checked });
                       if (errors.declaration) setErrors({ ...errors, declaration: null });
                     }}
-                    className="w-4 h-4 mt-0.5 rounded border-slate-700 text-cyber-cyan focus:ring-cyber-cyan bg-space-950 cursor-pointer"
+                    className="w-4 h-4 mt-0.5 rounded bg-space-950 border-slate-700 text-cyber-cyan focus:ring-cyber-cyan focus:ring-offset-space-950"
                   />
-                  <span className="text-xs sm:text-sm text-slate-300 group-hover:text-white transition-colors">
-                    I confirm that the information provided is correct. <span className="text-rose-400">*</span>
+                  <span className="text-xs text-slate-300 font-mono leading-relaxed">
+                    I confirm that the details provided are correct and match my official college records. I have verified the transaction reference number (UTR) and attached valid proof of payment.
                   </span>
                 </label>
                 {errors.declaration && (
-                  <p className="text-rose-400 text-xs font-mono mt-1.5 flex items-center">
-                    <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0" />
-                    <span>{errors.declaration}</span>
-                  </p>
+                  <p className="text-rose-400 text-xs font-mono mt-1.5">{errors.declaration}</p>
                 )}
               </div>
 
-              {/* STEP 5: SUBMIT */}
-              <div className="pt-2">
+              {/* SUBMIT BUTTON */}
+              <div className="pt-4">
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-4 rounded-xl bg-gradient-to-r from-cyber-cyan via-sky-400 to-cyber-purple text-space-950 font-bold font-tech text-base tracking-wider uppercase shadow-[0_0_30px_rgba(0,240,255,0.4)] hover:shadow-[0_0_40px_rgba(0,240,255,0.7)] transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 flex items-center justify-center space-x-2"
+                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-cyber-cyan via-sky-400 to-cyber-purple text-space-950 font-bold font-tech text-sm sm:text-base uppercase tracking-wider shadow-[0_0_30px_rgba(0,240,255,0.4)] hover:shadow-[0_0_40px_rgba(0,240,255,0.8)] hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                 >
                   {isSubmitting ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="w-5 h-5 border-2 border-space-950 border-t-transparent rounded-full animate-spin"></div>
-                      <span>Processing Registration...</span>
-                    </div>
+                    <span className="font-mono">Processing Registration...</span>
                   ) : (
                     <>
-                      <Ticket className="w-5 h-5" />
-                      <span>SUBMIT REGISTRATION</span>
+                      <span>Complete Registration & Pay ₹{feeBreakdown.total}</span>
                       <ArrowRight className="w-5 h-5" />
                     </>
                   )}

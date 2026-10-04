@@ -17,7 +17,7 @@ export const SCHEDULE_PHASES = [
     phase: 'Phase 3',
     title: 'Technical Events',
     category: 'Technical',
-    description: 'Mystery Code, Datathon, DeepFake Detection, Project Expo, Vibe Coding, Spider Building, Tool Finder, Visual Cipher, and Mind Matrix.',
+    description: 'Mystery Code, Datathon, DeepFake Detection, Project Expo, Vibe Coding, Visual Cipher, and Mind Matrix.',
     icon: 'Cpu'
   },
   {
@@ -29,9 +29,9 @@ export const SCHEDULE_PHASES = [
   },
   {
     phase: 'Phase 5',
-    title: 'Non-Technical Event',
-    category: 'Gaming',
-    description: 'E-Sports tournament matches.',
+    title: 'Non-Technical Events',
+    category: 'Non-Technical',
+    description: 'E-Sports, Tool Finder, and Escape Room.',
     icon: 'Gamepad2'
   },
   {

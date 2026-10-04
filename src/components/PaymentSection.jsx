@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { 
-  Upload, CheckCircle2, AlertCircle, Image as ImageIcon, X, CreditCard, ShieldAlert 
+import {
+  Upload, CheckCircle2, AlertCircle, Image as ImageIcon, X, CreditCard,
+  Gamepad2, Store, Users, User
 } from 'lucide-react';
 
 export default function PaymentSection({
@@ -9,7 +10,8 @@ export default function PaymentSection({
   paymentScreenshot,
   setPaymentScreenshot,
   errors,
-  setErrors
+  setErrors,
+  feeBreakdown
 }) {
   const [previewUrl, setPreviewUrl] = useState(null);
 
@@ -46,11 +48,13 @@ export default function PaymentSection({
     }
   };
 
+  const totalAmount = feeBreakdown?.total || 0;
+
   return (
     <div className="pt-6 border-t border-slate-800">
-      
+
       {/* Payment Header */}
-      <div className="flex items-center space-x-3 mb-3">
+      <div className="flex items-center space-x-3 mb-4">
         <div className="w-10 h-10 rounded-xl bg-cyber-cyan/15 text-cyber-cyan border border-cyber-cyan/30 flex items-center justify-center shrink-0">
           <CreditCard className="w-5 h-5" />
         </div>
@@ -59,26 +63,96 @@ export default function PaymentSection({
             PAYMENT
           </h3>
           <p className="text-xs sm:text-sm text-slate-300">
-            Scan the official UPI QR to complete payment.
+            Scan the official UPI QR to complete payment of <span className="text-cyber-cyan font-bold">₹{totalAmount}</span>.
           </p>
         </div>
       </div>
 
+      {/* Fee Breakdown & Summary Box */}
+      {feeBreakdown && (
+        <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-space-950/90 border border-cyber-cyan/30 shadow-[0_0_25px_rgba(0,240,255,0.08)]">
+          <div className="flex items-center justify-between mb-3 pb-3 border-b border-slate-800">
+            <div className="flex items-center space-x-2">
+              <CreditCard className="w-4 h-4 text-cyber-cyan" />
+              <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-300">
+                Payment Summary
+              </span>
+            </div>
+            <span className="text-[10px] font-mono text-cyber-cyan border border-cyber-cyan/30 px-2.5 py-0.5 rounded-full uppercase bg-cyber-cyan/10">
+              {feeBreakdown.registrationType === 'team'
+                ? 'Team (Max 4)'
+                : (feeBreakdown.hasEsports && !feeBreakdown.hasOtherEvents ? 'E-Sports (4 Players)' : 'Individual (1 Person)')}
+            </span>
+          </div>
+
+          <div className="space-y-2 text-xs font-mono">
+            {feeBreakdown.mainFee > 0 && (
+              <div className="flex items-center justify-between text-slate-300">
+                <span className="flex items-center space-x-2">
+                  {feeBreakdown.registrationType === 'team' ? (
+                    <Users className="w-3.5 h-3.5 text-cyber-purple shrink-0" />
+                  ) : (
+                    <User className="w-3.5 h-3.5 text-cyber-cyan shrink-0" />
+                  )}
+                  <span>{feeBreakdown.mainLabel}</span>
+                </span>
+                <span className="font-bold text-white">₹{feeBreakdown.mainFee}</span>
+              </div>
+            )}
+
+            {feeBreakdown.hasEsports && (
+              <div className="flex items-center justify-between text-slate-300">
+                <span className="flex items-center space-x-2">
+                  <Gamepad2 className="w-3.5 h-3.5 text-cyber-purple shrink-0" />
+                  <span>E-Sports Tournament (₹50 / team of 4)</span>
+                </span>
+                <span className="font-bold text-cyber-purple">₹{feeBreakdown.esportsFee}</span>
+              </div>
+            )}
+
+            {feeBreakdown.hasStall && (
+              <div className="flex items-center justify-between text-slate-300">
+                <span className="flex items-center space-x-2">
+                  <Store className="w-3.5 h-3.5 text-cyber-cyan shrink-0" />
+                  <span>Stall Booking (Separate Optional Selection)</span>
+                </span>
+                <span className="font-bold text-cyber-cyan">₹{feeBreakdown.stallFee}</span>
+              </div>
+            )}
+
+            <div className="pt-2.5 mt-2 border-t border-slate-800 flex items-center justify-between">
+              <span className="text-xs font-mono font-bold uppercase text-white">
+                Total Payable Amount:
+              </span>
+              <span className="text-xl sm:text-2xl font-black font-tech text-cyber-cyan tracking-wider">
+                ₹{totalAmount}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start mt-6">
-        
+
         {/* Left Column: Clearly Visible QR Placeholder Box */}
         <div className="md:col-span-5 cyber-glass rounded-2xl p-6 border border-cyber-cyan/30 text-center relative overflow-hidden flex flex-col items-center justify-center min-h-[260px]">
-          
+
           {/* Futuristic Placeholder Box */}
           <div className="w-full max-w-[240px] aspect-square rounded-2xl bg-space-950/90 border-2 border-dashed border-cyber-cyan/50 p-6 flex flex-col items-center justify-center shadow-[0_0_20px_rgba(0,240,255,0.15)] relative">
-            
-            <div className="w-12 h-12 rounded-xl bg-cyber-cyan/10 border border-cyber-cyan/30 flex items-center justify-center text-cyber-cyan mb-4">
+
+            <div className="w-12 h-12 rounded-xl bg-cyber-cyan/10 border border-cyber-cyan/30 flex items-center justify-center text-cyber-cyan mb-3">
               <CreditCard className="w-6 h-6 animate-pulse" />
             </div>
 
             <p className="font-tech font-bold text-xs sm:text-sm text-white tracking-wider uppercase leading-snug px-2">
               OFFICIAL UPI QR WILL BE ADDED HERE
             </p>
+
+            <div className="mt-2.5 px-3 py-1 rounded-lg bg-cyber-cyan/15 border border-cyber-cyan/30">
+              <span className="text-xs font-mono font-black text-cyber-cyan">
+                Amount: ₹{totalAmount}
+              </span>
+            </div>
 
             <span className="text-[10px] font-mono text-slate-500 mt-2 block">
               Official QR Placeholder
@@ -92,14 +166,14 @@ export default function PaymentSection({
           </div>
 
           <p className="text-[11px] font-mono text-slate-400 mt-4 max-w-xs">
-            Scan using your preferred UPI app once the official QR code is issued.
+            Scan using your preferred UPI app to pay ₹{totalAmount} once the official QR code is issued.
           </p>
 
         </div>
 
         {/* Right Column: UTR & Screenshot Upload Inputs */}
         <div className="md:col-span-7 space-y-5">
-          
+
           {/* Transaction ID / UTR */}
           <div>
             <label className="block text-xs font-mono font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
@@ -118,8 +192,8 @@ export default function PaymentSection({
                 }
               }}
               className={`w-full bg-space-950 border rounded-xl px-4 py-3 text-sm text-white font-mono placeholder-slate-500 focus:outline-none focus:ring-1 transition-all ${
-                errors?.utrNumber 
-                  ? 'border-rose-500 focus:ring-rose-500' 
+                errors?.utrNumber
+                  ? 'border-rose-500 focus:ring-rose-500'
                   : 'border-slate-800 focus:border-cyber-cyan focus:ring-cyber-cyan'
               }`}
             />
@@ -141,13 +215,13 @@ export default function PaymentSection({
             </label>
 
             <p className="text-xs text-slate-400 font-mono mb-2">
-              Please upload a clear screenshot of your successful payment.
+              Please upload a clear screenshot of your successful payment of ₹{totalAmount}.
             </p>
 
             {!paymentScreenshot ? (
               <label className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-2xl cursor-pointer hover:bg-space-900/60 transition-all ${
-                errors?.paymentScreenshot 
-                  ? 'border-rose-500/60 bg-rose-500/5' 
+                errors?.paymentScreenshot
+                  ? 'border-rose-500/60 bg-rose-500/5'
                   : 'border-slate-700 hover:border-cyber-cyan/50 bg-space-950/60'
               }`}>
                 <Upload className="w-8 h-8 text-cyber-cyan mb-2" />
@@ -168,9 +242,9 @@ export default function PaymentSection({
               <div className="p-3.5 rounded-2xl bg-space-950 border border-cyber-cyan/40 flex items-center justify-between">
                 <div className="flex items-center space-x-3 overflow-hidden">
                   {previewUrl ? (
-                    <img 
-                      src={previewUrl} 
-                      alt="Payment Screenshot Preview" 
+                    <img
+                      src={previewUrl}
+                      alt="Payment Screenshot Preview"
                       className="w-12 h-12 object-cover rounded-lg border border-slate-700 shrink-0"
                     />
                   ) : (

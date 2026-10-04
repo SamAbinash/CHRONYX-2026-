@@ -242,7 +242,10 @@ export async function createRegistration({
   teamMembers = [],
   flexibleMemberDetails = '',
   utr,
-  screenshotFile = null
+  screenshotFile = null,
+  amount = 0,
+  registrationType = 'individual',
+  bookStall = false
 }) {
   const regId = generateNextRegistrationId();
   const createdAtIso = new Date().toISOString();
@@ -306,7 +309,10 @@ export async function createRegistration({
     },
     status: STATUS_VALUES.VERIFICATION_PENDING,
     created_at: createdAtIso,
-    remarks: 'Registration submitted successfully. Payment verification is pending.'
+    remarks: 'Registration submitted successfully. Payment verification is pending.',
+    amount: Number(amount) || 0,
+    registration_type: registrationType || 'individual',
+    stall_booking: Boolean(bookStall)
   };
 
   // 1. Save to LocalStorage

@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { 
-  Phone, MessageSquare, Mail, User, ShieldCheck, Send, CheckCircle, Headphones, Sparkles 
+import {
+  Phone, MessageSquare, User, ShieldCheck, Send, CheckCircle, Headphones, Sparkles
 } from 'lucide-react';
 
 export default function Contact() {
-  const [activeModalContact, setActiveModalContact] = useState(null);
   const [inquirySent, setInquirySent] = useState(false);
   const [inquiryForm, setInquiryForm] = useState({
     name: '',
@@ -15,20 +14,13 @@ export default function Contact() {
 
   const coordinators = [
     {
-      role: 'Head of the Department',
-      title: 'HOD – AI&DS',
-      department: 'Department of Artificial Intelligence and Data Science',
-      badge: 'Faculty Convener',
-      color: 'border-cyber-purple text-cyber-purple',
-      type: 'faculty'
-    },
-    {
       role: 'Student Coordinator',
       title: 'Bharathasan',
       department: 'Department of Artificial Intelligence and Data Science',
       badge: 'Student Lead',
       color: 'border-cyber-cyan text-cyber-cyan',
-      type: 'student'
+      phone: '7200226208',
+      whatsapp: '7200226208'
     },
     {
       role: 'Student Coordinator',
@@ -36,7 +28,17 @@ export default function Contact() {
       department: 'Department of Artificial Intelligence and Data Science',
       badge: 'Student Lead',
       color: 'border-cyber-cyan text-cyber-cyan',
-      type: 'student'
+      phone: '9585605199',
+      whatsapp: '9585605199'
+    },
+    {
+      role: 'Student Coordinator',
+      title: 'Sam Abinash',
+      department: 'Department of Artificial Intelligence and Data Science',
+      badge: 'Student Lead',
+      color: 'border-cyber-cyan text-cyber-cyan',
+      phone: '9342049991',
+      whatsapp: '9342049991'
     }
   ];
 
@@ -52,13 +54,13 @@ export default function Contact() {
 
   return (
     <section id="contact" className="relative py-24 bg-space-900/60 overflow-hidden">
-      
+
       {/* Background Ambience */}
       <div className="absolute inset-0 bg-grid-cyber pointer-events-none opacity-20"></div>
       <div className="absolute top-1/2 right-1/4 w-96 h-96 bg-cyber-purple/10 rounded-full blur-[160px] pointer-events-none"></div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
           <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full cyber-glass border border-cyber-cyan/30 text-cyber-cyan text-xs font-mono uppercase tracking-widest mb-4">
@@ -70,15 +72,20 @@ export default function Contact() {
             Symposium <span className="cyber-gradient-text">Coordinators</span>
           </h2>
 
-          <p className="text-slate-400 text-sm sm:text-base">
-            Reach out to our organizing committee for registration queries, event guidelines, or campus assistance.
+          <p className="text-slate-400 text-sm sm:text-base mb-3">
+            Reach out to our student coordinators for registration queries, event guidelines, or campus assistance.
           </p>
+
+          <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-space-950/80 border border-cyber-purple/40 text-cyber-purple text-xs font-mono">
+            <User className="w-3.5 h-3.5 text-cyber-purple" />
+            <span>Faculty Convener: HOD – AI&DS</span>
+          </div>
         </div>
 
         {/* Coordinators Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
           {coordinators.map((c, idx) => (
-            <div 
+            <div
               key={idx}
               className="cyber-glass rounded-2xl p-6 sm:p-7 border border-slate-800 hover:border-cyber-cyan/40 transition-all duration-300 shadow-xl flex flex-col justify-between group"
             >
@@ -100,28 +107,36 @@ export default function Contact() {
                 <h3 className="text-xl sm:text-2xl font-bold font-tech text-white mt-1 mb-2 group-hover:text-cyber-cyan transition-colors">
                   {c.title}
                 </h3>
-                <p className="text-xs text-slate-300 leading-relaxed mb-6">
+                <p className="text-xs text-slate-300 leading-relaxed mb-4">
                   {c.department}
                 </p>
+
+                {/* Direct Phone Number Display */}
+                <div className="flex items-center space-x-2 text-xs font-mono text-cyber-cyan mb-6 bg-space-950/60 px-3 py-2 rounded-xl border border-slate-800">
+                  <Phone className="w-3.5 h-3.5 text-cyber-cyan shrink-0" />
+                  <span>+91 {c.phone}</span>
+                </div>
               </div>
 
-              {/* Call & WhatsApp Placeholders */}
+              {/* Call & WhatsApp Action Buttons */}
               <div className="space-y-2 pt-4 border-t border-slate-800/80">
-                <button
-                  onClick={() => setActiveModalContact({ name: c.title, role: c.role, action: 'Call' })}
+                <a
+                  href={`tel:+91${c.phone}`}
                   className="w-full py-2.5 px-4 rounded-xl cyber-glass border border-cyber-cyan/40 hover:border-cyber-cyan text-cyber-cyan hover:text-white text-xs font-mono font-medium transition-all flex items-center justify-center space-x-2"
                 >
                   <Phone className="w-3.5 h-3.5" />
                   <span>Call Coordinator</span>
-                </button>
+                </a>
 
-                <button
-                  onClick={() => setActiveModalContact({ name: c.title, role: c.role, action: 'WhatsApp' })}
+                <a
+                  href={`https://wa.me/91${c.whatsapp}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="w-full py-2.5 px-4 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/35 text-emerald-400 text-xs font-mono font-semibold transition-all flex items-center justify-center space-x-2"
                 >
                   <MessageSquare className="w-3.5 h-3.5" />
                   <span>WhatsApp Query</span>
-                </button>
+                </a>
               </div>
             </div>
           ))}
@@ -130,7 +145,7 @@ export default function Contact() {
         {/* Quick Help & Direct Message Box */}
         <div className="cyber-glass rounded-3xl p-6 sm:p-10 border border-slate-800 max-w-4xl mx-auto shadow-2xl">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
-            
+
             <div className="md:col-span-5 space-y-4">
               <span className="text-xs font-mono uppercase tracking-widest text-cyber-cyan font-semibold">
                 Have a Quick Question?
@@ -141,8 +156,12 @@ export default function Contact() {
               <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">
                 Send your queries regarding event rules, team eligibility, on-spot accommodation, or registration fee confirmation.
               </p>
-              
+
               <div className="space-y-2 text-xs font-mono text-slate-300 pt-2">
+                <div className="flex items-center space-x-2">
+                  <User className="w-4 h-4 text-cyber-purple" />
+                  <span>Faculty Convener: HOD – AI&DS</span>
+                </div>
                 <div className="flex items-center space-x-2">
                   <ShieldCheck className="w-4 h-4 text-cyber-cyan" />
                   <span>Organized by AI & DS Department</span>
@@ -214,45 +233,6 @@ export default function Contact() {
         </div>
 
       </div>
-
-      {/* Coordinator Contact Action Modal */}
-      {activeModalContact && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-space-950/80 backdrop-blur-md">
-          <div className="relative w-full max-w-md bg-space-900 border border-cyber-cyan/40 rounded-3xl p-6 shadow-2xl text-center">
-            
-            <div className="w-12 h-12 rounded-2xl bg-cyber-cyan/15 text-cyber-cyan mx-auto mb-3 flex items-center justify-center">
-              {activeModalContact.action === 'Call' ? <Phone className="w-6 h-6" /> : <MessageSquare className="w-6 h-6" />}
-            </div>
-
-            <h4 className="text-xl font-bold font-tech text-white">
-              {activeModalContact.action} {activeModalContact.name}
-            </h4>
-            <p className="text-xs text-slate-400 font-mono mt-1 mb-4">
-              {activeModalContact.role} • AI & DS Department
-            </p>
-
-            <div className="p-4 rounded-xl bg-space-950 border border-slate-800 text-xs text-slate-300 leading-relaxed text-left space-y-2 mb-6">
-              <p className="font-semibold text-cyber-cyan">Official Line Instructions:</p>
-              <p>
-                Student coordinator lines are open between <strong>08:30 AM to 06:00 PM</strong> for symposium assistance.
-              </p>
-              <p className="text-[11px] text-slate-400">
-                (Official phone numbers will be activated on the live college domain or pre-printed on the registration confirmations to preserve student privacy).
-              </p>
-            </div>
-
-            <div className="flex items-center justify-end space-x-3">
-              <button
-                onClick={() => setActiveModalContact(null)}
-                className="w-full py-2.5 rounded-xl bg-space-800 text-slate-200 hover:text-white font-mono text-xs transition-colors"
-              >
-                Close Window
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
 
     </section>
   );
