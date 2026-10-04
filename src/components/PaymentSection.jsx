@@ -55,22 +55,27 @@ export default function PaymentSection({
 
       {/* Payment Header */}
       <div className="flex items-center space-x-3 mb-4">
-        <div className="w-10 h-10 rounded-xl bg-cyber-cyan/15 text-cyber-cyan border border-cyber-cyan/30 flex items-center justify-center shrink-0">
+        <div className="w-10 h-10 rounded-xl bg-cyber-cyan/15 text-cyber-cyan border border-cyber-cyan/35 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(0,240,255,0.25)]">
           <CreditCard className="w-5 h-5" />
         </div>
         <div>
-          <h3 className="text-xl sm:text-2xl font-black font-tech text-white uppercase tracking-wider">
-            PAYMENT
-          </h3>
+          <div className="flex items-center space-x-2">
+            <h3 className="text-xl sm:text-2xl font-black font-tech text-white uppercase tracking-wider">
+              PAYMENT TERMINAL
+            </h3>
+            <span className="hidden sm:inline-block text-[10px] font-mono text-cyber-cyan border border-cyber-cyan/30 px-2 py-0.5 rounded-full uppercase bg-cyber-cyan/10">
+              SECURE GATEWAY
+            </span>
+          </div>
           <p className="text-xs sm:text-sm text-slate-300">
-            Scan the official UPI QR to complete payment of <span className="text-cyber-cyan font-bold">₹{totalAmount}</span>.
+            Scan the official UPI QR to complete payment of <span className="text-cyber-cyan font-bold font-tech">₹{totalAmount}</span>.
           </p>
         </div>
       </div>
 
       {/* Fee Breakdown & Summary Box */}
       {feeBreakdown && (
-        <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-space-950/90 border border-cyber-cyan/30 shadow-[0_0_25px_rgba(0,240,255,0.08)]">
+        <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-space-950/95 border border-cyber-cyan/35 shadow-[0_0_30px_rgba(0,240,255,0.1)] relative overflow-hidden hud-scanline">
           <div className="flex items-center justify-between mb-3 pb-3 border-b border-slate-800">
             <div className="flex items-center space-x-2">
               <CreditCard className="w-4 h-4 text-cyber-cyan" />
@@ -145,10 +150,19 @@ export default function PaymentSection({
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start mt-6">
 
         {/* Left Column: Official CHRONYX Payment QR Code */}
-        <div className="md:col-span-5 cyber-glass rounded-2xl p-5 border border-cyber-cyan/30 text-center relative overflow-hidden flex flex-col items-center justify-center">
+        <div className="md:col-span-5 cyber-glass rounded-2xl p-5 border border-cyber-cyan/40 text-center relative overflow-hidden flex flex-col items-center justify-center shadow-[0_0_30px_rgba(0,240,255,0.12)]">
+
+          {/* Telemetry Header */}
+          <div className="w-full flex items-center justify-between text-[10px] font-mono text-cyber-cyan/80 pb-2 mb-3 border-b border-cyber-cyan/20">
+            <span className="tracking-wider">PAYMENT TERMINAL // SECURE GATEWAY</span>
+            <span className="text-emerald-400 flex items-center space-x-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>LIVE</span>
+            </span>
+          </div>
 
           {/* Futuristic QR Frame */}
-          <div className="w-full max-w-[260px] rounded-2xl bg-space-950/95 border border-cyber-cyan/40 p-3 flex flex-col items-center justify-center shadow-[0_0_25px_rgba(0,240,255,0.18)] relative group">
+          <div className="w-full max-w-[260px] rounded-2xl bg-space-950/95 border-2 border-cyber-cyan/50 p-3.5 flex flex-col items-center justify-center shadow-[0_0_30px_rgba(0,240,255,0.25)] relative group">
 
             {/* Corner accents */}
             <div className="absolute top-2 left-2 w-3.5 h-3.5 border-t-2 border-l-2 border-cyber-cyan z-10 pointer-events-none"></div>
@@ -167,7 +181,7 @@ export default function PaymentSection({
             </div>
 
             {/* Dynamic Payable Amount Badge */}
-            <div className="mt-3 w-full py-2 px-3 rounded-xl bg-cyber-cyan/15 border border-cyber-cyan/30 flex items-center justify-between text-xs font-mono">
+            <div className="mt-3 w-full py-2 px-3 rounded-xl bg-cyber-cyan/15 border border-cyber-cyan/35 flex items-center justify-between text-xs font-mono">
               <span className="text-slate-300 text-[11px] font-semibold uppercase tracking-wider">
                 Total Payable:
               </span>
@@ -184,7 +198,7 @@ export default function PaymentSection({
           </div>
 
           <p className="text-[11px] font-mono text-slate-400 mt-3.5 max-w-xs leading-relaxed">
-            Scan using Google Pay, PhonePe, Paytm, or any UPI app to pay <span className="text-cyber-cyan font-bold">₹{totalAmount}</span>.
+            Scan using Google Pay, PhonePe, Paytm, or any UPI app to pay <span className="text-cyber-cyan font-bold font-tech">₹{totalAmount}</span>.
           </p>
 
         </div>

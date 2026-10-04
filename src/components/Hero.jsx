@@ -35,7 +35,7 @@ export default function Hero({ onExploreEvents, onRegisterNow, onCheckStatus }) 
   }, []);
 
   return (
-    <section id="home" className="relative min-h-screen pt-28 pb-20 flex items-center justify-center overflow-hidden bg-space-950">
+    <section id="home" className="relative min-h-screen pt-28 pb-20 flex items-center justify-center overflow-hidden bg-transparent">
       
       {/* Background Cybernetic Decor */}
       <div className="absolute inset-0 bg-grid-cyber pointer-events-none opacity-40"></div>
@@ -47,6 +47,7 @@ export default function Hero({ onExploreEvents, onRegisterNow, onCheckStatus }) 
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyber-blue/15 rounded-full blur-[140px] pointer-events-none"></div>
       <div className="absolute top-1/3 left-1/4 w-[420px] h-[420px] bg-cyber-purple/20 rounded-full blur-[130px] pointer-events-none"></div>
       <div className="absolute bottom-1/4 right-1/4 w-[450px] h-[450px] bg-cyber-cyan/15 rounded-full blur-[140px] pointer-events-none"></div>
+      <div className="absolute top-1/4 right-12 w-[380px] h-[380px] bg-rose-600/10 rounded-full blur-[160px] pointer-events-none"></div>
 
       {/* Abstract AI Neural Core Graphic behind title */}
       <AiCoreGraphic />

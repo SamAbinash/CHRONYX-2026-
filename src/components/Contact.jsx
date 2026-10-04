@@ -53,11 +53,12 @@ export default function Contact() {
   };
 
   return (
-    <section id="contact" className="relative py-24 bg-space-900/60 overflow-hidden">
+    <section id="contact" className="relative py-24 bg-transparent overflow-hidden">
 
       {/* Background Ambience */}
       <div className="absolute inset-0 bg-grid-cyber pointer-events-none opacity-20"></div>
       <div className="absolute top-1/2 right-1/4 w-96 h-96 bg-cyber-purple/10 rounded-full blur-[160px] pointer-events-none"></div>
+      <div className="absolute bottom-10 left-10 w-80 h-80 bg-rose-600/8 rounded-full blur-[150px] pointer-events-none"></div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -87,17 +88,23 @@ export default function Contact() {
           {coordinators.map((c, idx) => (
             <div
               key={idx}
-              className="cyber-glass rounded-2xl p-6 sm:p-7 border border-slate-800 hover:border-cyber-cyan/40 transition-all duration-300 shadow-xl flex flex-col justify-between group"
+              className="cyber-glass rounded-2xl p-6 sm:p-7 border border-slate-800/80 hover:border-cyber-cyan/50 hover:shadow-[0_0_30px_rgba(0,240,255,0.15)] transition-all duration-300 flex flex-col justify-between group relative overflow-hidden"
             >
+              {/* Subtle top indicator bar */}
+              <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-cyber-cyan/30 to-transparent group-hover:via-cyber-cyan transition-colors"></div>
+
               <div>
-                {/* Badge */}
+                {/* Badge & Telemetry */}
                 <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-space-950 border border-slate-700 flex items-center justify-center text-cyber-cyan group-hover:border-cyber-cyan group-hover:scale-110 transition-all">
+                  <div className="w-12 h-12 rounded-xl bg-space-950 border border-slate-700 flex items-center justify-center text-cyber-cyan group-hover:border-cyber-cyan group-hover:scale-110 transition-all shadow-[0_0_12px_rgba(0,240,255,0.2)]">
                     <User className="w-6 h-6" />
                   </div>
-                  <span className={`text-[10px] font-mono font-bold px-3 py-1 rounded-full border bg-space-950/70 ${c.color}`}>
-                    {c.badge}
-                  </span>
+                  <div className="flex flex-col items-end space-y-1">
+                    <span className={`text-[10px] font-mono font-bold px-3 py-1 rounded-full border bg-space-950/70 ${c.color}`}>
+                      {c.badge}
+                    </span>
+                    <span className="text-[9px] font-mono text-slate-500">COMMS // 0{idx + 1}</span>
+                  </div>
                 </div>
 
                 {/* Coordinator Name & Title */}

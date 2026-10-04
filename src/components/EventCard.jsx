@@ -22,18 +22,24 @@ export default function EventCard({ event, onOpenDetails, onRegisterEvent }) {
   const isTechnical = event.category === 'Technical';
 
   return (
-    <div className={`cyber-glass rounded-2xl p-6 flex flex-col justify-between transition-all duration-300 relative group overflow-hidden border ${
+    <div className={`cyber-glass hud-scanline rounded-2xl p-6 flex flex-col justify-between transition-all duration-300 relative group overflow-hidden border ${
       isTechnical 
-        ? 'border-cyber-cyan/20 hover:border-cyber-cyan hover:shadow-[0_0_35px_rgba(0,240,255,0.25)] hover:-translate-y-1.5' 
-        : 'border-cyber-purple/30 hover:border-cyber-purple hover:shadow-[0_0_35px_rgba(168,85,247,0.3)] hover:-translate-y-1.5'
+        ? 'border-cyber-cyan/30 hover:border-cyber-cyan hover:shadow-[0_0_35px_rgba(0,240,255,0.3)] hover:-translate-y-1.5'
+        : 'border-cyber-purple/35 hover:border-cyber-purple hover:shadow-[0_0_35px_rgba(168,85,247,0.35)] hover:-translate-y-1.5'
     }`}>
       
       {/* Circuit-style Corner Brackets */}
-      <div className={`absolute top-0 right-0 w-6 h-6 pointer-events-none transition-opacity duration-300 opacity-40 group-hover:opacity-100 ${
+      <div className={`absolute top-0 right-0 w-6 h-6 pointer-events-none transition-opacity duration-300 opacity-60 group-hover:opacity-100 ${
         isTechnical ? 'border-t-2 border-r-2 border-cyber-cyan' : 'border-t-2 border-r-2 border-cyber-purple'
       }`} />
-      <div className={`absolute bottom-0 left-0 w-6 h-6 pointer-events-none transition-opacity duration-300 opacity-40 group-hover:opacity-100 ${
+      <div className={`absolute bottom-0 left-0 w-6 h-6 pointer-events-none transition-opacity duration-300 opacity-60 group-hover:opacity-100 ${
         isTechnical ? 'border-b-2 border-l-2 border-cyber-cyan' : 'border-b-2 border-l-2 border-cyber-purple'
+      }`} />
+      <div className={`absolute top-0 left-0 w-2.5 h-2.5 pointer-events-none opacity-40 ${
+        isTechnical ? 'border-t border-l border-cyber-cyan' : 'border-t border-l border-cyber-purple'
+      }`} />
+      <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 pointer-events-none opacity-40 ${
+        isTechnical ? 'border-b border-r border-cyber-cyan' : 'border-b border-r border-cyber-purple'
       }`} />
 
       {/* Subtle Background Neural Grid Watermark */}
@@ -41,12 +47,21 @@ export default function EventCard({ event, onOpenDetails, onRegisterEvent }) {
 
       <div className="relative z-10">
         
+        {/* Tiny Technical HUD Node Label */}
+        <div className="flex items-center justify-between text-[9px] font-mono text-slate-500 mb-3 tracking-widest uppercase">
+          <span className="flex items-center space-x-1">
+            <span className={`w-1 h-1 rounded-full ${isTechnical ? 'bg-cyber-cyan animate-pulse' : 'bg-cyber-purple animate-pulse'}`}></span>
+            <span>HUD // NODE_{event.id.replace(/-/g, '_').toUpperCase()}</span>
+          </span>
+          <span className="opacity-60">SYS_OK</span>
+        </div>
+
         {/* Header Telemetry: Icon & Category Badge */}
         <div className="flex items-center justify-between mb-4">
           <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 ${
             isTechnical 
-              ? 'bg-cyber-cyan/15 text-cyber-cyan border border-cyber-cyan/35 shadow-[0_0_15px_rgba(0,240,255,0.2)]' 
-              : 'bg-cyber-purple/15 text-cyber-purple border border-cyber-purple/35 shadow-[0_0_15px_rgba(168,85,247,0.2)]'
+              ? 'bg-cyber-cyan/15 text-cyber-cyan border border-cyber-cyan/35 shadow-[0_0_15px_rgba(0,240,255,0.25)]'
+              : 'bg-cyber-purple/15 text-cyber-purple border border-cyber-purple/35 shadow-[0_0_15px_rgba(168,85,247,0.25)]'
           }`}>
             <IconComponent className="w-6 h-6" />
           </div>
@@ -54,8 +69,8 @@ export default function EventCard({ event, onOpenDetails, onRegisterEvent }) {
           <div className="flex items-center space-x-2">
             <span className={`text-[10px] font-mono font-bold px-3 py-1 rounded-full uppercase tracking-wider ${
               isTechnical
-                ? 'bg-cyber-cyan/10 text-cyber-cyan border border-cyber-cyan/30'
-                : 'bg-cyber-purple/15 text-purple-300 border border-cyber-purple/40'
+                ? 'bg-cyber-cyan/15 text-cyber-cyan border border-cyber-cyan/35'
+                : 'bg-cyber-purple/20 text-purple-300 border border-cyber-purple/45'
             }`}>
               {event.category}
             </span>

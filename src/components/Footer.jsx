@@ -30,13 +30,29 @@ export default function Footer({ onNavigate, onOpenOrganizer }) {
   ];
 
   return (
-    <footer className="relative bg-space-950 border-t border-slate-800/80 pt-16 pb-12 overflow-hidden text-slate-400 text-xs font-mono">
-      
+    <footer className="relative bg-space-950/85 backdrop-blur-md border-t border-cyber-cyan/20 pt-14 pb-12 overflow-hidden text-slate-400 text-xs font-mono">
+
       {/* Background Subtle Cyber Glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-32 bg-cyber-cyan/5 blur-3xl pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
+        {/* Emergency Grid Telemetry Strip */}
+        <div className="flex flex-wrap items-center justify-between text-[10px] font-mono text-slate-500 pb-6 mb-8 border-b border-slate-800/80 gap-3">
+          <div className="flex items-center space-x-2 text-cyber-cyan">
+            <span className="w-1.5 h-1.5 rounded-full bg-cyber-cyan animate-pulse"></span>
+            <span>SYSTEM: CHRONYX_CORE_V2.6 // STATUS: OPTIMAL</span>
+          </div>
+          <div className="flex items-center space-x-4">
+            <span className="hidden sm:inline text-slate-400">ENCRYPTION: 256_SHA</span>
+            <span className="hidden md:inline text-slate-400">GEO_BEACON: 13.1256° N, 80.0382° E</span>
+            <span className="text-emerald-400 flex items-center space-x-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              <span>GRID_SYNC: 100%</span>
+            </span>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 pb-12 border-b border-slate-800/70">
           
           {/* Col 1: Brand & College Info */}

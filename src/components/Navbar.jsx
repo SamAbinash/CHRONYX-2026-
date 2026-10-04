@@ -33,8 +33,8 @@ export default function Navbar({ onNavigate, activeSection }) {
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
       scrolled 
-        ? 'bg-space-950/80 backdrop-blur-xl border-b border-cyber-cyan/20 py-3 shadow-[0_4px_30px_rgba(0,0,0,0.5)]' 
-        : 'bg-space-950/40 backdrop-blur-md border-b border-slate-800/40 py-4 sm:py-5'
+        ? 'bg-[#02040a]/85 backdrop-blur-xl border-b border-cyber-cyan/35 py-3 shadow-[0_4px_30px_rgba(0,240,255,0.18)]'
+        : 'bg-[#02040a]/50 backdrop-blur-md border-b border-cyber-cyan/20 py-4 sm:py-5'
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
@@ -88,6 +88,10 @@ export default function Navbar({ onNavigate, activeSection }) {
 
           {/* Right Action Button - Primary CTA: REGISTER PASS */}
           <div className="hidden sm:flex items-center space-x-3">
+            <div className="hidden xl:flex items-center space-x-1.5 text-[10px] font-mono text-cyber-cyan/80 px-2.5 py-1 rounded-full bg-space-950/80 border border-cyber-cyan/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyber-cyan animate-pulse"></span>
+              <span>GRID: ONLINE</span>
+            </div>
             <a
               href="#register"
               onClick={(e) => { e.preventDefault(); handleLinkClick('register'); }}

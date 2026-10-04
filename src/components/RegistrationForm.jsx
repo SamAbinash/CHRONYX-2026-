@@ -481,12 +481,13 @@ export default function RegistrationForm({
   const showTeamSection = isEsportsSelected || isProjectExpoSelected || maxNormalAllowed > 1 || formData.teamMembers.length > 0;
 
   return (
-    <section id="register" className="relative py-24 bg-space-950 overflow-hidden">
+    <section id="register" className="relative py-24 bg-transparent overflow-hidden">
 
       {/* Background Cyber Accents */}
       <div className="absolute inset-0 bg-grid-cyber pointer-events-none opacity-20"></div>
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyber-cyan/10 rounded-full blur-[140px] pointer-events-none"></div>
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyber-purple/10 rounded-full blur-[140px] pointer-events-none"></div>
+      <div className="absolute top-1/2 left-10 w-80 h-80 bg-rose-600/8 rounded-full blur-[150px] pointer-events-none"></div>
 
       <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -518,7 +519,22 @@ export default function RegistrationForm({
         {/* REGISTRATION CONFIRMATION SCREEN (When submitted)                */}
         {/* ================================================================ */}
         {submittedData ? (
-          <div className="cyber-glass rounded-3xl p-6 sm:p-10 border border-cyber-cyan/40 shadow-[0_0_50px_rgba(0,240,255,0.2)] text-center animate-fade-in relative overflow-hidden">
+          <div className="cyber-glass rounded-3xl p-6 sm:p-10 border border-cyber-cyan/50 shadow-[0_0_60px_rgba(0,240,255,0.25)] text-center animate-fade-in relative overflow-hidden hud-scanline">
+
+            {/* Corner HUD Brackets */}
+            <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-cyber-cyan pointer-events-none"></div>
+            <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-cyber-cyan pointer-events-none"></div>
+            <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-cyber-cyan pointer-events-none"></div>
+            <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-cyber-cyan pointer-events-none"></div>
+
+            {/* Confirmation Telemetry Bar */}
+            <div className="flex items-center justify-between text-[10px] font-mono text-emerald-400/90 pb-2 mb-6 border-b border-emerald-500/20">
+              <span className="tracking-widest uppercase flex items-center space-x-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>AUTH_RECORD_CONFIRMED // SYMPOSIUM PASS GENERATED</span>
+              </span>
+              <span className="text-slate-500 font-mono">STATUS: 200_OK</span>
+            </div>
 
             <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center mx-auto mb-4 shadow-[0_0_20px_rgba(16,185,129,0.3)]">
               <CheckCircle2 className="w-10 h-10" />
@@ -696,7 +712,25 @@ export default function RegistrationForm({
           /* ================================================================ */
           /* REGISTRATION FORM                                                */
           /* ================================================================ */
-          <div className="cyber-glass rounded-3xl p-6 sm:p-10 border border-cyber-cyan/30 shadow-[0_0_50px_rgba(0,240,255,0.15)] relative">
+          <div className="cyber-glass rounded-3xl p-6 sm:p-10 border border-cyber-cyan/35 shadow-[0_0_60px_rgba(0,240,255,0.18)] relative overflow-hidden">
+
+            {/* Corner HUD Brackets */}
+            <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-cyber-cyan pointer-events-none"></div>
+            <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-cyber-cyan pointer-events-none"></div>
+            <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-cyber-cyan pointer-events-none"></div>
+            <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-cyber-cyan pointer-events-none"></div>
+
+            {/* Terminal Header Telemetry Bar */}
+            <div className="flex items-center justify-between text-[10px] font-mono text-cyber-cyan/80 pb-3 mb-6 border-b border-cyber-cyan/20">
+              <div className="flex items-center space-x-2">
+                <span className="w-2 h-2 rounded-full bg-cyber-cyan animate-pulse"></span>
+                <span className="tracking-widest uppercase">REGISTRATION CONSOLE // SYSTEM_NODE: CHX-2026</span>
+              </div>
+              <div className="flex items-center space-x-3 text-slate-400">
+                <span className="hidden sm:inline">GRID_REF: #SEC-AUTH-01</span>
+                <span className="text-emerald-400 font-bold">READY</span>
+              </div>
+            </div>
 
             <form onSubmit={handleSubmit} className="space-y-8">
 

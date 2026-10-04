@@ -5,11 +5,12 @@ export default function Venue() {
   const mapsUrl = "https://www.google.com/maps/search/?api=1&query=Jaya+Sakthi+Engineering+College+Thiruninravur+Thiruvallur+District+Tamil+Nadu";
 
   return (
-    <section id="venue" className="relative py-24 bg-space-950 overflow-hidden">
+    <section id="venue" className="relative py-24 bg-transparent overflow-hidden">
       
       {/* Background Ambience */}
       <div className="absolute inset-0 bg-grid-cyber pointer-events-none opacity-20"></div>
       <div className="absolute bottom-0 left-1/4 w-80 h-80 bg-cyber-cyan/10 rounded-full blur-[140px] pointer-events-none"></div>
+      <div className="absolute top-10 right-1/4 w-80 h-80 bg-rose-600/8 rounded-full blur-[150px] pointer-events-none"></div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
@@ -36,9 +37,23 @@ export default function Venue() {
           <div className="lg:col-span-6 space-y-6">
             
             {/* Primary Address Box */}
-            <div className="cyber-glass rounded-3xl p-6 sm:p-8 border border-cyber-cyan/30 shadow-xl relative overflow-hidden">
+            <div className="cyber-glass rounded-3xl p-6 sm:p-8 border border-cyber-cyan/35 shadow-[0_0_40px_rgba(0,240,255,0.15)] relative overflow-hidden hud-scanline">
+              {/* Corner HUD Brackets */}
+              <div className="absolute top-2.5 left-2.5 w-3.5 h-3.5 border-t-2 border-l-2 border-cyber-cyan pointer-events-none"></div>
+              <div className="absolute top-2.5 right-2.5 w-3.5 h-3.5 border-t-2 border-r-2 border-cyber-cyan pointer-events-none"></div>
+              <div className="absolute bottom-2.5 left-2.5 w-3.5 h-3.5 border-b-2 border-l-2 border-cyber-cyan pointer-events-none"></div>
+              <div className="absolute bottom-2.5 right-2.5 w-3.5 h-3.5 border-b-2 border-r-2 border-cyber-cyan pointer-events-none"></div>
+
+              <div className="flex items-center justify-between text-[10px] font-mono text-cyber-cyan/80 pb-2 mb-4 border-b border-cyber-cyan/20">
+                <span className="tracking-widest uppercase">DESTINATION // GRID_REF: TNV-602024</span>
+                <span className="text-emerald-400 font-bold flex items-center space-x-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span>NAV_LOCKED</span>
+                </span>
+              </div>
+
               <div className="flex items-start space-x-4 mb-4">
-                <div className="w-12 h-12 rounded-2xl bg-cyber-cyan/15 border border-cyber-cyan/30 text-cyber-cyan flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(0,240,255,0.3)]">
+                <div className="w-12 h-12 rounded-2xl bg-cyber-cyan/15 border border-cyber-cyan/35 text-cyber-cyan flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(0,240,255,0.3)]">
                   <MapPin className="w-6 h-6" />
                 </div>
                 <div>

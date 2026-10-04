@@ -139,22 +139,37 @@ export default function EventModal({ event, onClose, onRegisterEvent }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto bg-space-950/80 backdrop-blur-md animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto bg-space-950/85 backdrop-blur-md animate-fade-in">
 
       {/* Modal Backdrop click */}
       <div className="fixed inset-0" onClick={onClose}></div>
 
       {/* Modal Dialog Box */}
-      <div className="relative w-full max-w-lg bg-space-900 border border-cyber-cyan/30 rounded-3xl p-6 sm:p-8 shadow-[0_0_50px_rgba(0,240,255,0.2)] z-10 max-h-[90vh] overflow-y-auto">
+      <div className="relative w-full max-w-lg bg-space-950/95 border border-cyber-cyan/40 rounded-3xl p-6 sm:p-8 shadow-[0_0_60px_rgba(0,240,255,0.25)] z-10 max-h-[90vh] overflow-y-auto hud-scanline">
+
+        {/* 4-Corner HUD circuit brackets */}
+        <div className="absolute top-2.5 left-2.5 w-3.5 h-3.5 border-t-2 border-l-2 border-cyber-cyan pointer-events-none"></div>
+        <div className="absolute top-2.5 right-2.5 w-3.5 h-3.5 border-t-2 border-r-2 border-cyber-cyan pointer-events-none"></div>
+        <div className="absolute bottom-2.5 left-2.5 w-3.5 h-3.5 border-b-2 border-l-2 border-cyber-cyan pointer-events-none"></div>
+        <div className="absolute bottom-2.5 right-2.5 w-3.5 h-3.5 border-b-2 border-r-2 border-cyber-cyan pointer-events-none"></div>
 
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-space-800 transition-colors"
+          className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-space-800 transition-colors z-20"
           aria-label="Close modal"
         >
           <X className="w-5 h-5" />
         </button>
+
+        {/* HUD Mission Console Status Tag */}
+        <div className="flex items-center justify-between text-[10px] font-mono text-cyber-cyan/80 pb-3 mb-5 border-b border-cyber-cyan/20 pr-8">
+          <div className="flex items-center space-x-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span className="tracking-wider">CONSOLE // SEC-07 // EVENT_INITIALIZED</span>
+          </div>
+          <span className="text-slate-500 font-mono text-[9px]">ID: {event.id || 'EVT'}</span>
+        </div>
 
         {/* Modal Header with Icon, Category Badge & Name */}
         <div className="flex items-start space-x-3 sm:space-x-4 pr-8 mb-6">

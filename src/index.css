@@ -13,7 +13,7 @@
   }
   
   body {
-    background-color: #030712;
+    background-color: #02040a;
     color: #f1f5f9;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
@@ -26,7 +26,7 @@
     height: 7px;
   }
   ::-webkit-scrollbar-track {
-    background: #030712;
+    background: #02040a;
   }
   ::-webkit-scrollbar-thumb {
     background: #111d42;
@@ -45,21 +45,57 @@
   .text-glow-purple {
     text-shadow: 0 0 12px rgba(168, 85, 247, 0.6), 0 0 25px rgba(168, 85, 247, 0.3);
   }
+  .text-glow-red {
+    text-shadow: 0 0 12px rgba(239, 68, 68, 0.6), 0 0 25px rgba(239, 68, 68, 0.3);
+  }
+  .emergency-glow {
+    box-shadow: 0 0 30px rgba(239, 68, 68, 0.18);
+  }
   .cyber-glass {
-    background: rgba(8, 14, 32, 0.72);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(0, 240, 255, 0.16);
+    background: rgba(6, 12, 28, 0.78);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(0, 240, 255, 0.22);
+    box-shadow: 0 0 25px rgba(0, 240, 255, 0.08), inset 0 0 15px rgba(0, 240, 255, 0.03);
   }
   .cyber-glass-hover:hover {
-    border-color: rgba(0, 240, 255, 0.45);
-    box-shadow: 0 0 30px rgba(0, 240, 255, 0.15);
+    border-color: rgba(0, 240, 255, 0.55);
+    box-shadow: 0 0 35px rgba(0, 240, 255, 0.2), inset 0 0 20px rgba(0, 240, 255, 0.06);
   }
   .cyber-glass-purple {
-    background: rgba(14, 10, 32, 0.72);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(168, 85, 247, 0.2);
+    background: rgba(14, 8, 28, 0.78);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(168, 85, 247, 0.25);
+    box-shadow: 0 0 25px rgba(168, 85, 247, 0.1), inset 0 0 15px rgba(168, 85, 247, 0.03);
+  }
+  .cyber-glass-purple:hover {
+    border-color: rgba(168, 85, 247, 0.6);
+    box-shadow: 0 0 35px rgba(168, 85, 247, 0.25), inset 0 0 20px rgba(168, 85, 247, 0.06);
+  }
+  .hud-scanline {
+    position: relative;
+    overflow: hidden;
+  }
+  .hud-scanline::after {
+    content: '';
+    position: absolute;
+    top: -100%;
+    left: 0;
+    right: 0;
+    height: 100%;
+    background: linear-gradient(to bottom, transparent 0%, rgba(0, 240, 255, 0.09) 50%, transparent 100%);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .hud-scanline:hover::after {
+    opacity: 1;
+    animation: hudScanline 2.5s linear infinite;
+  }
+  @keyframes hudScanline {
+    0% { transform: translateY(0%); }
+    100% { transform: translateY(200%); }
   }
   .cyber-gradient-text {
     background: linear-gradient(135deg, #ffffff 0%, #00f0ff 45%, #a855f7 100%);
