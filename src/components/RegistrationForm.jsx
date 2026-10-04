@@ -6,7 +6,7 @@ import { createRegistration } from '../services/registrationService';
 import {
   Ticket, User, Layers, Users, Plus, Trash2,
   CheckCircle2, AlertCircle, ArrowRight, Printer, ArrowLeft, Clock,
-  Store, Sparkles
+  Store, Sparkles, Cpu, Gamepad2, Award
 } from 'lucide-react';
 
 export default function RegistrationForm({
@@ -24,10 +24,9 @@ export default function RegistrationForm({
     department: '',
     year: 'III Year',
     registrationType: 'individual', // 'individual' or 'team'
-    selectedCategory: 'all', // 'all', 'technical', 'non-technical'
     selectedEvents: [],
-    bookStall: false, // Optional Stall Booking (+₹150 / team)
-    isTeam: false,
+    bookStall: false,
+    foodPreference: 'Veg', // 'Veg' or 'Non-Veg' (complimentary, ₹0)
     teamName: '',
     teamMembers: [],
     flexibleMemberDetails: '',
@@ -40,14 +39,123 @@ export default function RegistrationForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedData, setSubmittedData] = useState(null);
 
+  const isEsportsSelected = formData.selectedEvents.includes('E-Sports');
+  const isProjectExpoSelected = formData.selectedEvents.includes('Project Expo');
+  const otherSymposiumEvents = formData.selectedEvents.filter(
+    e => e !== 'E-Sports' && e !== 'Project Expo'
+  );
+  const hasOtherEvents = otherSymposiumEvents.length > 0;
+
+  // Selected normal events with their configurations
+  const selectedNormalEvents = EVENTS_DATA.filter(
+    e => formData.selectedEvents.includes(e.name) && e.name !== 'E-Sports' && e.name !== 'Project Expo'
+  );
+
+  // Maximum allowed team members across selected normal events
+  const maxNormalAllowed = selectedNormalEvents.length > 0
+    ? Math.max(...selectedNormalEvents.map(e => e.maxMembers || 1))
+    : 1;
+
+  // Minimum required team members across selected normal events
+  const minNormalRequired = selectedNormalEvents.length > 0
+    ? Math.max(...selectedNormalEvents.map(e => e.minMembers || 1))
+    : 1;
+
+  // Overall maximum allowed members based on selected events
+  const maxAllowedTotalMembers = isEsportsSelected
+    ? 4
+    : isProjectExpoSelected && !isEsportsSelected
+    ? 2
+    : selectedNormalEvents.length > 0
+    ? maxNormalAllowed
+    : 4;
+
+  const isTeam = formData.teamMembers.length > 0 || isEsportsSelected || isProjectExpoSelected || formData.registrationType === 'team';
+  const participantCount = isTeam ? (1 + formData.teamMembers.length) : 1;
+
+  // Calculate dynamic fees based on official requirements:
+  // 1. Individual registration: 1 person = ₹100
+  // 2. Normal team/group registration: Each participant costs ₹100 (2 = ₹200, 3 = ₹300, 4 = ₹400)
+  // 3. Special event pricing:
+  //    - E-Sports: ₹400 per 4-member team
+  //    - Project Expo: ₹200 per 2-member team
+  //    - Stall: ₹150 (separate optional add-on)
+  //    - Food: ₹0 (complimentary)
+  // 4. Avoid duplicate charging:
+  //    - E-Sports must remain ₹400 total, not ₹100 × 4 + ₹400
+  //    - Project Expo must remain ₹200 total, not ₹100 × 2 + ₹200
+  //    - Stall adds ₹150 separately
+  const feeBreakdown = (() => {
+    let normalFee = 0;
+    let normalLabel = '';
+    let hasNormalFee = false;
+
+    const esportsFee = isEsportsSelected ? 400 : 0;
+    const projectExpoFee = isProjectExpoSelected ? 200 : 0;
+    const stallFee = formData.bookStall ? 150 : 0;
+
+    if (!isEsportsSelected && !isProjectExpoSelected) {
+      // Normal symposium registration
+      hasNormalFee = true;
+      normalFee = participantCount * 100;
+      if (participantCount === 1) {
+        normalLabel = isTeam ? 'Team Registration (1 Member @ ₹100)' : 'Individual Registration (1 Person)';
+      } else {
+        normalLabel = `Team Registration (${participantCount} Members @ ₹100 each)`;
+      }
+    } else {
+      // Special events are selected. E-Sports is ₹400 total, Project Expo is ₹200 total.
+      // Normal fee is set to 0 to prevent duplicate charging.
+      hasNormalFee = false;
+      normalFee = 0;
+    }
+
+    const total = normalFee + esportsFee + projectExpoFee + stallFee;
+    const registrationType = isTeam ? 'team' : 'individual';
+
+    return {
+      registrationType,
+      isTeam,
+      participantCount,
+      hasGeneralEvents: hasNormalFee,
+      generalFee: normalFee,
+      normalLabel,
+      hasProjectExpo: isProjectExpoSelected,
+      projectExpoFee,
+      hasEsports: isEsportsSelected,
+      esportsFee,
+      hasStall: formData.bookStall,
+      stallFee,
+      total
+    };
+  })();
+
   // Sync preSelectedEvent if passed from EventCard or Modal
   useEffect(() => {
     if (preSelectedEvent) {
       setFormData(prev => {
         if (!prev.selectedEvents.includes(preSelectedEvent)) {
+          const updatedEvents = [...prev.selectedEvents, preSelectedEvent];
+          let updatedMembers = [...prev.teamMembers];
+          let updatedType = prev.registrationType;
+
+          if (preSelectedEvent === 'E-Sports') {
+            updatedType = 'team';
+            while (updatedMembers.length < 3) {
+              updatedMembers.push({ name: '', email: '', mobile: '' });
+            }
+          } else if (preSelectedEvent === 'Project Expo') {
+            updatedType = 'team';
+            if (!updatedEvents.includes('E-Sports') && updatedMembers.length < 1) {
+              updatedMembers.push({ name: '', email: '', mobile: '' });
+            }
+          }
+
           return {
             ...prev,
-            selectedEvents: [...prev.selectedEvents, preSelectedEvent]
+            registrationType: updatedType,
+            selectedEvents: updatedEvents,
+            teamMembers: updatedMembers
           };
         }
         return prev;
@@ -60,82 +168,107 @@ export default function RegistrationForm({
     }
   }, [preSelectedEvent]);
 
-  // Calculate dynamic fees based on official requirements
-  const feeBreakdown = (() => {
-    const hasEsports = formData.selectedEvents.some(e => e.toLowerCase() === 'e-sports');
-    const otherEvents = formData.selectedEvents.filter(e => e.toLowerCase() !== 'e-sports');
-    const hasOtherEvents = otherEvents.length > 0;
-    const isTeam = formData.registrationType === 'team';
-
-    let mainFee = 0;
-    let mainLabel = '';
-
-    // If symposium events selected, or default before event selection
-    if (hasOtherEvents || (!hasEsports && formData.selectedEvents.length === 0)) {
-      if (isTeam) {
-        mainFee = 350;
-        mainLabel = 'Team Registration (Max 4 members)';
-      } else {
-        mainFee = 100;
-        mainLabel = 'Individual Registration (1 person)';
-      }
+  // Individual pass selection handler
+  const handleSelectIndividual = () => {
+    const remainingEvents = formData.selectedEvents.filter(
+      e => e !== 'E-Sports' && e !== 'Project Expo'
+    );
+    setFormData(prev => ({
+      ...prev,
+      registrationType: 'individual',
+      selectedEvents: remainingEvents,
+      teamMembers: []
+    }));
+    if (errors.teamMembers) {
+      setErrors(prev => ({ ...prev, teamMembers: null }));
     }
+  };
 
-    const esportsFee = hasEsports ? 50 : 0;
-    const stallFee = formData.bookStall ? 150 : 0;
-    const total = mainFee + esportsFee + stallFee;
-
-    return {
-      registrationType: formData.registrationType,
-      isTeam,
-      hasOtherEvents,
-      hasEsports,
-      mainFee,
-      mainLabel,
-      esportsFee,
-      hasStall: formData.bookStall,
-      stallFee,
-      total
-    };
-  })();
+  // Switch Registration Type (Individual vs Team)
+  const handleRegistrationTypeChange = (type) => {
+    if (type === 'individual') {
+      handleSelectIndividual();
+    } else {
+      setFormData(prev => {
+        let updatedMembers = [...prev.teamMembers];
+        if (updatedMembers.length === 0) {
+          updatedMembers = [{ name: '', email: '', mobile: '' }];
+        }
+        return {
+          ...prev,
+          registrationType: 'team',
+          teamMembers: updatedMembers
+        };
+      });
+    }
+    if (errors.teamMembers) {
+      setErrors(prev => ({ ...prev, teamMembers: null }));
+    }
+  };
 
   // Event selection toggle
   const toggleEvent = (eventName) => {
     setFormData(prev => {
       const exists = prev.selectedEvents.includes(eventName);
-      const updated = exists
+      const updatedEvents = exists
         ? prev.selectedEvents.filter(e => e !== eventName)
         : [...prev.selectedEvents, eventName];
-      return { ...prev, selectedEvents: updated };
+
+      let updatedMembers = [...prev.teamMembers];
+      let updatedType = prev.registrationType;
+
+      if (!exists) {
+        if (eventName === 'E-Sports') {
+          updatedType = 'team';
+          while (updatedMembers.length < 3) {
+            updatedMembers.push({ name: '', email: '', mobile: '' });
+          }
+        } else if (eventName === 'Project Expo') {
+          updatedType = 'team';
+          if (!updatedEvents.includes('E-Sports') && updatedMembers.length < 1) {
+            updatedMembers.push({ name: '', email: '', mobile: '' });
+          }
+        }
+      }
+
+      return {
+        ...prev,
+        registrationType: updatedType,
+        selectedEvents: updatedEvents,
+        teamMembers: updatedMembers
+      };
     });
     if (errors.selectedEvents) {
       setErrors(prev => ({ ...prev, selectedEvents: null }));
     }
   };
 
-  // Switch Registration Type
-  const handleRegistrationTypeChange = (type) => {
-    setFormData(prev => ({
-      ...prev,
-      registrationType: type,
-      isTeam: type === 'team' || prev.teamMembers.length > 0 || prev.teamName.trim().length > 0
-    }));
-  };
-
-  // Team member handlers: 1 leader (primary) + up to 3 teammates = 4 members maximum
-  const MAX_ADDITIONAL_MEMBERS = 3;
-
+  // Team member handlers
   const handleAddMember = () => {
-    if (formData.teamMembers.length >= MAX_ADDITIONAL_MEMBERS) {
+    if (isEsportsSelected && formData.teamMembers.length >= 3) {
       setErrors(prev => ({
         ...prev,
-        teamMembers: 'Maximum 4 members allowed per team (1 Team Leader + 3 Teammates).'
+        teamMembers: 'E-Sports tournament requires exactly 4 players (1 Team Leader + 3 Teammates).'
+      }));
+      return;
+    }
+    if (isProjectExpoSelected && !isEsportsSelected && formData.teamMembers.length >= 1) {
+      setErrors(prev => ({
+        ...prev,
+        teamMembers: 'Project Expo requires exactly 2 members (1 Team Leader + 1 Teammate).'
+      }));
+      return;
+    }
+    if (formData.teamMembers.length + 1 >= maxAllowedTotalMembers) {
+      setErrors(prev => ({
+        ...prev,
+        teamMembers: `Maximum ${maxAllowedTotalMembers} members allowed for the selected event(s).`
       }));
       return;
     }
     setFormData(prev => ({
       ...prev,
-      isTeam: true,
+      registrationType: 'team',
       teamMembers: [...prev.teamMembers, { name: '', email: '', mobile: '' }]
     }));
     if (errors.teamMembers) {
@@ -147,14 +280,30 @@ export default function RegistrationForm({
     const updated = [...formData.teamMembers];
     updated[index][field] = value;
     setFormData(prev => ({ ...prev, teamMembers: updated }));
+    if (errors.teamMembers) {
+      setErrors(prev => ({ ...prev, teamMembers: null }));
+    }
   };
 
   const handleRemoveMember = (index) => {
+    if (isEsportsSelected && formData.teamMembers.length <= 3) {
+      setErrors(prev => ({
+        ...prev,
+        teamMembers: 'E-Sports tournament requires exactly 4 players (1 Team Leader + 3 Teammates).'
+      }));
+      return;
+    }
+    if (isProjectExpoSelected && !isEsportsSelected && formData.teamMembers.length <= 1) {
+      setErrors(prev => ({
+        ...prev,
+        teamMembers: 'Project Expo requires exactly 2 members (1 Team Leader + 1 Teammate).'
+      }));
+      return;
+    }
     const updated = formData.teamMembers.filter((_, i) => i !== index);
     setFormData(prev => ({
       ...prev,
-      teamMembers: updated,
-      isTeam: prev.registrationType === 'team' || updated.length > 0 || prev.teamName.trim().length > 0
+      teamMembers: updated
     }));
     if (errors.teamMembers) {
       setErrors(prev => ({ ...prev, teamMembers: null }));
@@ -190,28 +339,38 @@ export default function RegistrationForm({
       newErrors.year = 'Year of Study is required.';
     }
 
-    if (formData.selectedEvents.length === 0) {
-      newErrors.selectedEvents = 'Please select at least one event.';
+    if (formData.selectedEvents.length === 0 && !formData.bookStall) {
+      newErrors.selectedEvents = 'Please select at least one event or stall booking.';
     }
 
-    // Team Size Validation: max 4 members total (1 leader + 3 teammates)
-    if (formData.teamMembers.length > MAX_ADDITIONAL_MEMBERS) {
-      newErrors.teamMembers = 'Team size cannot exceed 4 members in total (1 Team Leader + 3 Teammates).';
-    }
-
-    // If Team Registration, ensure added teammate names are filled
-    if (formData.registrationType === 'team' && formData.teamMembers.length > 0) {
-      const hasEmptyName = formData.teamMembers.some(m => !m.name || !m.name.trim());
-      if (hasEmptyName) {
-        newErrors.teamMembers = 'Please enter names for all added teammates, or remove extra teammate slots.';
+    // E-Sports requires exactly 4 members total (1 leader + 3 teammates)
+    if (isEsportsSelected) {
+      if (formData.teamMembers.length !== 3) {
+        newErrors.teamMembers = 'E-Sports tournament requires a team of exactly 4 players (1 Team Leader + 3 Teammates). Please provide details for all 3 teammates.';
+      } else if (formData.teamMembers.some(m => !m.name || !m.name.trim())) {
+        newErrors.teamMembers = 'Please enter full names for all 3 E-Sports teammates.';
       }
     }
 
-    // E-Sports requires 4 players total (1 leader + 3 teammates)
-    const hasEsports = formData.selectedEvents.some(e => e.toLowerCase() === 'e-sports');
-    if (hasEsports) {
-      if (formData.teamMembers.length < 3) {
-        newErrors.teamMembers = 'E-Sports tournament requires a team of 4 players (1 Team Leader + 3 Teammates). Please add all 3 teammate details.';
+    // Project Expo requires exactly 2 members total (1 leader + 1 teammate)
+    if (isProjectExpoSelected && !isEsportsSelected) {
+      if (formData.teamMembers.length !== 1) {
+        newErrors.teamMembers = 'Project Expo requires a team of exactly 2 members (1 Team Leader + 1 Teammate). Please provide 1 teammate details.';
+      } else if (formData.teamMembers.some(m => !m.name || !m.name.trim())) {
+        newErrors.teamMembers = 'Please enter the full name for your Project Expo teammate.';
+      }
+    }
+
+    // Normal team registration validation (neither E-Sports nor Project Expo)
+    if (!isEsportsSelected && !isProjectExpoSelected) {
+      const teamRequiredEvents = selectedNormalEvents.filter(e => (e.minMembers || 1) > 1);
+      if (teamRequiredEvents.length > 0 && formData.teamMembers.length === 0) {
+        const reqMin = teamRequiredEvents[0].minMembers;
+        newErrors.teamMembers = `${teamRequiredEvents.map(e => e.name).join(', ')} requires a team of at least ${reqMin} members. Please click 'Add Teammate (+₹100)' to add teammates.`;
+      } else if (formData.teamMembers.length > 0) {
+        if (formData.teamMembers.some(m => !m.name || !m.name.trim())) {
+          newErrors.teamMembers = 'Please enter names for all added teammates, or remove empty teammate slots.';
+        }
       }
     }
 
@@ -254,11 +413,13 @@ export default function RegistrationForm({
         year: formData.year,
         selectedEvents: formData.selectedEvents,
         teamMembers: formData.teamMembers.filter(m => m.name && m.name.trim() !== ''),
+        teamName: formData.teamName,
+        foodPreference: formData.foodPreference,
         flexibleMemberDetails: formData.flexibleMemberDetails,
         utr: utrNumber,
         screenshotFile: paymentScreenshot,
         amount: feeBreakdown.total,
-        registrationType: formData.registrationType,
+        registrationType: feeBreakdown.registrationType,
         bookStall: formData.bookStall
       });
 
@@ -297,10 +458,9 @@ export default function RegistrationForm({
       department: '',
       year: 'III Year',
       registrationType: 'individual',
-      selectedCategory: 'all',
       selectedEvents: [],
       bookStall: false,
-      isTeam: false,
+      foodPreference: 'Veg',
       teamName: '',
       teamMembers: [],
       flexibleMemberDetails: '',
@@ -318,8 +478,7 @@ export default function RegistrationForm({
   // Filter events for selection step
   const technicalEvents = EVENTS_DATA.filter(e => e.category === 'Technical');
   const nonTechnicalEvents = EVENTS_DATA.filter(e => e.category === 'Non-Technical');
-  const hasEsportsSelected = formData.selectedEvents.some(e => e.toLowerCase() === 'e-sports');
-  const showTeamSection = formData.registrationType === 'team' || hasEsportsSelected;
+  const showTeamSection = isEsportsSelected || isProjectExpoSelected || maxNormalAllowed > 1 || formData.teamMembers.length > 0;
 
   return (
     <section id="register" className="relative py-24 bg-space-950 overflow-hidden">
@@ -392,7 +551,7 @@ export default function RegistrationForm({
             </div>
 
             {/* Registration Summary Card (Printable) */}
-            <div className="p-5 sm:p-6 rounded-2xl bg-space-950/80 border border-slate-800 text-left space-y-3 mb-8 max-w-xl mx-auto print:border-black print:text-black">
+            <div className="p-5 sm:p-6 rounded-2xl bg-space-950/80 border border-slate-800 text-left space-y-3.5 mb-8 max-w-xl mx-auto print:border-black print:text-black">
 
               {/* Participant Name */}
               <div className="flex items-center justify-between border-b border-slate-800 pb-2 print:border-black">
@@ -416,18 +575,20 @@ export default function RegistrationForm({
                 </div>
               </div>
 
-              {/* Registration Type & Fee Paid */}
+              {/* Registration Type, Food Preference & Fee Paid */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono pt-2 border-t border-slate-800 print:border-black">
                 <div>
                   <span className="text-slate-400 block print:text-gray-600">Registration Type</span>
                   <span className="text-cyber-cyan font-bold capitalize print:text-black">
-                    {submittedData.registration_type === 'team' ? 'Team (Max 4)' : 'Individual'}
+                    {submittedData.registration_type === 'team'
+                      ? `Team Registration (${(submittedData.teamMembers?.length || 0) + 1} Members)`
+                      : 'Individual Registration (1 Person)'}
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block print:text-gray-600">Stall Booking</span>
-                  <span className="text-slate-200 font-semibold print:text-black">
-                    {submittedData.stall_booking ? 'Yes (₹150)' : 'No'}
+                  <span className="text-slate-400 block print:text-gray-600">Food Preference</span>
+                  <span className="text-emerald-400 font-semibold print:text-black">
+                    {submittedData.food_preference || submittedData.foodPreference || 'Veg'} (Included)
                   </span>
                 </div>
                 <div>
@@ -438,13 +599,21 @@ export default function RegistrationForm({
                 </div>
               </div>
 
+              {/* Stall Booking Status */}
+              {submittedData.stall_booking && (
+                <div className="text-xs font-mono pt-1 text-slate-300 print:text-black">
+                  <span className="text-slate-400">Stall Booking: </span>
+                  <span className="text-sky-400 font-bold">Yes (Dedicated Venue Stall Booked)</span>
+                </div>
+              )}
+
               {/* Selected Events */}
               <div>
                 <span className="text-[10px] font-mono uppercase text-slate-400 block mb-1.5 print:text-gray-600">
                   Selected Event(s)
                 </span>
                 <div className="flex flex-wrap gap-1.5">
-                  {submittedData.events.map((ev, i) => (
+                  {submittedData.events && submittedData.events.map((ev, i) => (
                     <span
                       key={i}
                       className="px-2.5 py-1 rounded-lg bg-cyber-cyan/10 border border-cyber-cyan/30 text-cyber-cyan text-xs font-mono font-semibold print:border-black print:text-black"
@@ -468,6 +637,18 @@ export default function RegistrationForm({
                   </ul>
                 </div>
               )}
+
+              {/* Provision Badges */}
+              <div className="pt-2 border-t border-slate-800 print:border-black grid grid-cols-2 gap-2 text-xs font-mono">
+                <div className="p-2 rounded-lg bg-space-900 border border-cyber-cyan/30 text-cyber-cyan flex items-center space-x-1.5">
+                  <Award className="w-3.5 h-3.5 shrink-0" />
+                  <span>Certificate Provided</span>
+                </div>
+                <div className="p-2 rounded-lg bg-space-900 border border-cyber-purple/30 text-purple-300 flex items-center space-x-1.5">
+                  <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                  <span>Food Provided</span>
+                </div>
+              </div>
 
               {/* Event Date & Venue Reminder */}
               <div className="pt-2 border-t border-slate-800 print:border-black text-[11px] font-mono text-slate-400 print:text-black">
@@ -671,55 +852,185 @@ export default function RegistrationForm({
                   </span>
                 </div>
 
-                {/* Registration Type Selector */}
+                {/* Registration Options: Individual, E-Sports, Project Expo, Stall Booking */}
                 <div className="mb-6">
-                  <span className="text-[11px] font-mono text-slate-300 uppercase font-bold tracking-wider block mb-2">
-                    Select Registration Type <span className="text-rose-400">*</span>
-                  </span>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="flex items-center justify-between mb-2.5">
+                    <span className="text-[11px] font-mono text-slate-300 uppercase font-bold tracking-wider">
+                      Registration Options & Featured Add-ons <span className="text-rose-400">*</span>
+                    </span>
+                    <span className="text-[10px] font-mono text-slate-400">
+                      Select individual pass, featured events, or stall
+                    </span>
+                  </div>
 
-                    {/* Individual Registration */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+
+                    {/* Option 1: Individual Registration */}
                     <button
                       type="button"
-                      onClick={() => handleRegistrationTypeChange('individual')}
-                      className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between ${
-                        formData.registrationType === 'individual'
+                      onClick={handleSelectIndividual}
+                      className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between group ${
+                        !isEsportsSelected && !isProjectExpoSelected && formData.teamMembers.length === 0
                           ? 'bg-cyber-cyan/15 border-cyber-cyan shadow-[0_0_20px_rgba(0,240,255,0.25)] text-white'
                           : 'bg-space-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
                       }`}
                     >
-                      <div className="flex items-center justify-between w-full mb-1.5">
-                        <span className="text-xs font-mono uppercase font-bold text-cyber-cyan flex items-center space-x-1.5">
-                          <User className="w-4 h-4" />
-                          <span>Individual Registration</span>
-                        </span>
-                        <span className="text-sm font-black font-tech text-cyber-cyan">₹100 / person</span>
+                      <div>
+                        <div className="flex items-center justify-between w-full mb-2">
+                          <span className="text-xs font-mono uppercase font-bold text-cyber-cyan flex items-center space-x-1.5">
+                            <User className="w-4 h-4" />
+                            <span>Individual Registration</span>
+                          </span>
+                          <span className="text-sm font-black font-tech text-cyber-cyan">₹100</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 mb-2">
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyber-cyan/20 text-cyber-cyan border border-cyber-cyan/40 font-semibold">
+                            ₹100 / person
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 font-mono leading-relaxed">
+                          Standard symposium pass for 1 person across events. Used for normal individual event participation.
+                        </p>
                       </div>
-                      <p className="text-[11px] text-slate-400 font-mono">
-                        Standard individual pass for 1 person across symposium events.
-                      </p>
+
+                      <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono">
+                        <span className={!isEsportsSelected && !isProjectExpoSelected && formData.teamMembers.length === 0 ? 'text-cyber-cyan font-bold' : 'text-slate-500'}>
+                          {!isEsportsSelected && !isProjectExpoSelected && formData.teamMembers.length === 0 ? '✓ Selected (1 Person)' : 'Click to Select'}
+                        </span>
+                        <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border ${
+                          !isEsportsSelected && !isProjectExpoSelected && formData.teamMembers.length === 0
+                            ? 'bg-cyber-cyan border-cyber-cyan text-space-950'
+                            : 'border-slate-700'
+                        }`}>
+                          {!isEsportsSelected && !isProjectExpoSelected && formData.teamMembers.length === 0 && (
+                            <CheckCircle2 className="w-4 h-4" />
+                          )}
+                        </div>
+                      </div>
                     </button>
 
-                    {/* Team Registration */}
+                    {/* Option 2: E-Sports */}
                     <button
                       type="button"
-                      onClick={() => handleRegistrationTypeChange('team')}
-                      className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between ${
-                        formData.registrationType === 'team'
-                          ? 'bg-cyber-purple/20 border-cyber-purple shadow-[0_0_20px_rgba(168,85,247,0.3)] text-white'
+                      onClick={() => toggleEvent('E-Sports')}
+                      className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between group ${
+                        isEsportsSelected
+                          ? 'bg-cyber-purple/25 border-cyber-purple shadow-[0_0_25px_rgba(168,85,247,0.35)] text-white'
                           : 'bg-space-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
                       }`}
                     >
-                      <div className="flex items-center justify-between w-full mb-1.5">
-                        <span className="text-xs font-mono uppercase font-bold text-purple-300 flex items-center space-x-1.5">
-                          <Users className="w-4 h-4" />
-                          <span>Team Registration</span>
-                        </span>
-                        <span className="text-sm font-black font-tech text-purple-300">₹350 / team</span>
+                      <div>
+                        <div className="flex items-center justify-between w-full mb-2">
+                          <span className="text-xs font-mono uppercase font-bold text-cyber-purple flex items-center space-x-1.5">
+                            <Gamepad2 className="w-4 h-4" />
+                            <span>E-Sports</span>
+                          </span>
+                          <span className="text-sm font-black font-tech text-cyber-purple">₹400 / team</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 mb-2">
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyber-purple/20 text-purple-300 border border-cyber-purple/40 font-semibold">
+                            Team Event • 4 Members
+                          </span>
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center space-x-1">
+                            <Sparkles className="w-3 h-3 text-amber-300" />
+                            <span>Cash Prizes Available</span>
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 font-mono leading-relaxed">
+                          Competitive Free Fire BR arena tournament. Requires exactly 4 registered players (₹400 total).
+                        </p>
                       </div>
-                      <p className="text-[11px] text-slate-400 font-mono">
-                        Maximum 4 members per team (1 Team Leader + up to 3 Teammates).
-                      </p>
+
+                      <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono">
+                        <span className={isEsportsSelected ? 'text-cyber-purple font-bold' : 'text-slate-500'}>
+                          {isEsportsSelected ? '✓ Selected (4 Members Required)' : 'Click to Select'}
+                        </span>
+                        <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border ${
+                          isEsportsSelected ? 'bg-cyber-purple border-cyber-purple text-space-950' : 'border-slate-700'
+                        }`}>
+                          {isEsportsSelected && <CheckCircle2 className="w-4 h-4" />}
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Option 3: Project Expo */}
+                    <button
+                      type="button"
+                      onClick={() => toggleEvent('Project Expo')}
+                      className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between group ${
+                        isProjectExpoSelected
+                          ? 'bg-cyber-cyan/20 border-cyber-cyan shadow-[0_0_25px_rgba(0,240,255,0.3)] text-white'
+                          : 'bg-space-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-center justify-between w-full mb-2">
+                          <span className="text-xs font-mono uppercase font-bold text-cyber-cyan flex items-center space-x-1.5">
+                            <Cpu className="w-4 h-4" />
+                            <span>Project Expo</span>
+                          </span>
+                          <span className="text-sm font-black font-tech text-cyber-cyan">₹200 / team</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 mb-2">
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyber-cyan/20 text-cyber-cyan border border-cyber-cyan/40 font-semibold">
+                            Team Event • 2 Members
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 font-mono leading-relaxed">
+                          Demonstrate working prototypes, models, and innovative solutions. Requires exactly 2 members (₹200 total).
+                        </p>
+                      </div>
+
+                      <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono">
+                        <span className={isProjectExpoSelected ? 'text-cyber-cyan font-bold' : 'text-slate-500'}>
+                          {isProjectExpoSelected ? '✓ Selected (2 Members Required)' : 'Click to Select'}
+                        </span>
+                        <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border ${
+                          isProjectExpoSelected ? 'bg-cyber-cyan border-cyber-cyan text-space-950' : 'border-slate-700'
+                        }`}>
+                          {isProjectExpoSelected && <CheckCircle2 className="w-4 h-4" />}
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Option 4: Stall Booking */}
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, bookStall: !prev.bookStall }))}
+                      className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between group ${
+                        formData.bookStall
+                          ? 'bg-sky-500/20 border-sky-400 shadow-[0_0_25px_rgba(56,189,248,0.3)] text-white'
+                          : 'bg-space-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-center justify-between w-full mb-2">
+                          <span className="text-xs font-mono uppercase font-bold text-sky-400 flex items-center space-x-1.5">
+                            <Store className="w-4 h-4" />
+                            <span>Stall Booking</span>
+                          </span>
+                          <span className="text-sm font-black font-tech text-sky-400">₹150 / stall</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 mb-2">
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40 font-semibold">
+                            Optional Add-on
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 font-mono leading-relaxed">
+                          Dedicated stall at the campus venue. Completely separate booking, not treated as an event or team registration.
+                        </p>
+                      </div>
+
+                      <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono">
+                        <span className={formData.bookStall ? 'text-sky-400 font-bold' : 'text-slate-500'}>
+                          {formData.bookStall ? '✓ Booked (+₹150 to total)' : 'Click to Add Stall'}
+                        </span>
+                        <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border ${
+                          formData.bookStall ? 'bg-sky-400 border-sky-400 text-space-950' : 'border-slate-700'
+                        }`}>
+                          {formData.bookStall && <CheckCircle2 className="w-4 h-4" />}
+                        </div>
+                      </div>
                     </button>
 
                   </div>
@@ -732,14 +1043,20 @@ export default function RegistrationForm({
                   </p>
                 )}
 
-                {/* Technical Events */}
-                <div className="mb-4">
-                  <span className="text-[11px] font-mono text-cyber-cyan uppercase font-bold tracking-wider block mb-2">
-                    Technical Events
-                  </span>
+                {/* General Symposium Events - Technical */}
+                <div className="mb-4 pt-4 border-t border-slate-800">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[11px] font-mono text-cyber-cyan uppercase font-bold tracking-wider">
+                      Technical Events (General Symposium Events)
+                    </span>
+                    <span className="text-[10px] font-mono text-slate-400">
+                      Select any to participate
+                    </span>
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                     {technicalEvents.map(ev => {
                       const isSelected = formData.selectedEvents.includes(ev.name);
+                      const isExpo = ev.id === 'project-expo';
                       return (
                         <button
                           type="button"
@@ -752,8 +1069,17 @@ export default function RegistrationForm({
                           }`}
                         >
                           <div className="overflow-hidden pr-2">
-                            <p className="text-xs font-bold font-tech truncate">{ev.name}</p>
-                            <p className="text-[10px] text-slate-400 font-mono">Technical</p>
+                            <div className="flex items-center space-x-1.5 flex-wrap">
+                              <p className="text-xs font-bold font-tech truncate">{ev.name}</p>
+                              {isExpo && (
+                                <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-cyber-cyan/20 text-cyber-cyan border border-cyber-cyan/30">
+                                  ₹200
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-slate-400 font-mono">
+                              {ev.memberCount || 'Technical'}
+                            </p>
                           </div>
                           <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border ${
                             isSelected ? 'bg-cyber-cyan border-cyber-cyan text-space-950' : 'border-slate-700'
@@ -766,12 +1092,12 @@ export default function RegistrationForm({
                   </div>
                 </div>
 
-                {/* Non-Technical Event (E-Sports) */}
+                {/* Non-Technical Events */}
                 <div className="mb-6">
                   <span className="text-[11px] font-mono text-cyber-purple uppercase font-bold tracking-wider block mb-2">
-                    Non-Technical Event
+                    Non-Technical Events
                   </span>
-                  <div className="grid grid-cols-1 gap-2.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                     {nonTechnicalEvents.map(ev => {
                       const isSelected = formData.selectedEvents.includes(ev.name);
                       const isEsports = ev.id === 'e-sports' || ev.name.toLowerCase().includes('e-sports');
@@ -780,30 +1106,26 @@ export default function RegistrationForm({
                           type="button"
                           key={ev.id}
                           onClick={() => toggleEvent(ev.name)}
-                          className={`p-3.5 rounded-xl text-left border transition-all flex items-start justify-between ${
+                          className={`p-3 rounded-xl text-left border transition-all flex items-center justify-between ${
                             isSelected
                               ? 'bg-cyber-purple/20 border-cyber-purple shadow-[0_0_15px_rgba(168,85,247,0.3)] text-white'
                               : 'bg-space-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
                           }`}
                         >
                           <div className="overflow-hidden pr-2">
-                            <div className="flex items-center space-x-2 flex-wrap gap-1">
-                              <p className="text-xs font-bold font-tech">{ev.name}</p>
+                            <div className="flex items-center space-x-1.5 flex-wrap">
+                              <p className="text-xs font-bold font-tech truncate">{ev.name}</p>
                               {isEsports && (
-                                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                                  ₹50 / team
-                                </span>
-                              )}
-                              {isEsports && (
-                                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center space-x-1">
-                                  <Sparkles className="w-3 h-3 text-amber-300" />
-                                  <span>Cash Prizes Available</span>
+                                <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-cyber-purple/20 text-purple-300 border border-cyber-purple/40">
+                                  ₹400
                                 </span>
                               )}
                             </div>
-                            <p className="text-[10px] text-purple-300 font-mono mt-1">Non-Technical Event • Team size: 4 players</p>
+                            <p className="text-[10px] text-purple-300 font-mono">
+                              {ev.memberCount || 'Non-Technical'}
+                            </p>
                           </div>
-                          <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border mt-0.5 ${
+                          <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border ${
                             isSelected ? 'bg-cyber-purple border-cyber-purple text-space-950' : 'border-slate-700'
                           }`}>
                             {isSelected && <CheckCircle2 className="w-4 h-4" />}
@@ -812,37 +1134,6 @@ export default function RegistrationForm({
                       );
                     })}
                   </div>
-                </div>
-
-                {/* Stall Booking Addon Box (Separate Optional Selection: ₹150 / team) */}
-                <div className="mb-6 p-4 rounded-2xl bg-space-950/90 border border-cyber-cyan/30 hover:border-cyber-cyan/50 transition-all">
-                  <label className="flex items-start space-x-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.bookStall}
-                      onChange={(e) => setFormData({ ...formData, bookStall: e.target.checked })}
-                      className="w-4 h-4 mt-1 rounded bg-space-900 border-slate-700 text-cyber-cyan focus:ring-cyber-cyan focus:ring-offset-space-950 cursor-pointer"
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between flex-wrap gap-2">
-                        <div className="flex items-center space-x-2">
-                          <Store className="w-4 h-4 text-cyber-cyan" />
-                          <span className="text-xs font-mono font-bold uppercase text-white tracking-wider">
-                            Book a Project / Product Stall
-                          </span>
-                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyber-cyan/15 text-cyber-cyan border border-cyber-cyan/30">
-                            Separate Optional Selection
-                          </span>
-                        </div>
-                        <span className="text-xs sm:text-sm font-black font-tech text-cyber-cyan">
-                          ₹150 / team
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-slate-400 font-mono mt-1 leading-relaxed">
-                        Dedicated stall at the campus venue. Stall payment is completely separate from the main registration fee (not included in the ₹350 team registration fee).
-                      </p>
-                    </div>
-                  </label>
                 </div>
 
                 {/* Selected Events Summary */}
@@ -872,149 +1163,239 @@ export default function RegistrationForm({
                   </div>
                 )}
 
-                {/* Team / Member Details (Shown for Team Registration or E-Sports) */}
-                {showTeamSection ? (
-                  <div className="p-5 rounded-2xl bg-space-950/80 border border-slate-800 space-y-4">
-
-                    <div className="flex items-center justify-between flex-wrap gap-2 mb-2 pb-2 border-b border-slate-800">
-                      <div>
-                        <span className="text-xs font-mono uppercase text-slate-200 font-bold flex items-center space-x-1.5">
-                          <Users className="w-4 h-4 text-cyber-cyan" />
-                          <span>Team Details (Maximum 4 Members)</span>
-                        </span>
-                        <p className="text-[11px] text-slate-400 font-mono mt-0.5">
-                          1 Team Leader + up to 3 Teammates (Total 4 members maximum).
-                        </p>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={handleAddMember}
-                        disabled={formData.teamMembers.length >= MAX_ADDITIONAL_MEMBERS}
-                        className="px-3 py-1.5 rounded-lg border border-dashed border-cyber-cyan/40 hover:border-cyber-cyan text-cyber-cyan text-xs font-mono flex items-center space-x-1 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>
-                          {formData.teamMembers.length >= MAX_ADDITIONAL_MEMBERS
-                            ? 'Max 4 Members Reached'
-                            : 'Add Teammate'}
-                        </span>
-                      </button>
-                    </div>
-
-                    {/* Member #1: Team Leader from Step 1 */}
-                    <div className="p-3 rounded-xl bg-space-900/80 border border-cyber-cyan/30 flex items-center justify-between text-xs font-mono">
-                      <div className="flex items-center space-x-2">
-                        <span className="px-2 py-0.5 rounded bg-cyber-cyan/20 text-cyber-cyan font-bold text-[10px] uppercase">
-                          Member #1 (Leader)
-                        </span>
-                        <span className="text-white font-semibold">
-                          {formData.fullName || 'Leader name entered in Step 1'}
-                        </span>
-                      </div>
-                      <span className="text-[10px] text-slate-400 font-mono">
-                        {formData.mobile ? `+91 ${formData.mobile}` : 'Contact in Step 1'}
-                      </span>
-                    </div>
-
-                    {/* Optional Team Name */}
-                    <div>
-                      <label className="block text-[11px] font-mono text-slate-400 uppercase mb-1">
-                        Team Name (Optional)
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Team Alpha / Neural Squad"
-                        value={formData.teamName}
-                        onChange={(e) => setFormData({ ...formData, teamName: e.target.value })}
-                        className="w-full bg-space-900 border border-slate-800 focus:border-cyber-cyan rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
-                      />
-                    </div>
-
-                    {/* Additional Teammate Input Fields (Members 2 to 4) */}
-                    {formData.teamMembers.length > 0 && (
-                      <div className="space-y-2.5">
-                        {formData.teamMembers.map((member, idx) => (
-                          <div key={idx} className="p-3 rounded-xl bg-space-900/60 border border-slate-800/80 flex flex-col sm:flex-row items-center gap-2">
-                            <span className="text-xs font-mono font-bold text-cyber-cyan shrink-0">
-                              Member #{idx + 2}
-                            </span>
-                            <input
-                              type="text"
-                              required
-                              placeholder="Member Full Name *"
-                              value={member.name}
-                              onChange={(e) => handleMemberChange(idx, 'name', e.target.value)}
-                              className="w-full sm:flex-1 bg-space-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500"
-                            />
-                            <input
-                              type="email"
-                              placeholder="Email (optional)"
-                              value={member.email}
-                              onChange={(e) => handleMemberChange(idx, 'email', e.target.value)}
-                              className="w-full sm:flex-1 bg-space-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500"
-                            />
-                            <input
-                              type="tel"
-                              maxLength={10}
-                              placeholder="Mobile (optional)"
-                              value={member.mobile}
-                              onChange={(e) => handleMemberChange(idx, 'mobile', e.target.value.replace(/\D/g, ''))}
-                              className="w-full sm:w-32 bg-space-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white font-mono placeholder-slate-500"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveMember(idx)}
-                              className="text-slate-500 hover:text-rose-400 p-1.5 shrink-0"
-                              title="Remove Teammate"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {errors.teamMembers && (
-                      <p className="text-rose-400 text-xs font-mono flex items-center">
-                        <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0" />
-                        <span>{errors.teamMembers}</span>
-                      </p>
-                    )}
-
-                    {/* Flexible Member Details Text Area */}
-                    <div>
-                      <label className="block text-[11px] font-mono text-slate-400 uppercase mb-1">
-                        Additional Member / Participation Notes (Flexible)
-                      </label>
-                      <textarea
-                        rows={2}
-                        placeholder="Provide any additional notes or team details here..."
-                        value={formData.flexibleMemberDetails}
-                        onChange={(e) => setFormData({ ...formData, flexibleMemberDetails: e.target.value })}
-                        className="w-full bg-space-900 border border-slate-800 focus:border-cyber-cyan rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none resize-none"
-                      ></textarea>
-                    </div>
-
-                  </div>
-                ) : (
-                  <div className="p-4 rounded-2xl bg-space-950/60 border border-slate-800 text-slate-400 text-xs font-mono flex items-center justify-between">
-                    <span>
-                      Individual Registration selected: Pass issued for 1 person (Member #1).
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleRegistrationTypeChange('team')}
-                      className="text-cyber-cyan hover:underline ml-2 shrink-0 font-bold"
-                    >
-                      Switch to Team (₹350)
-                    </button>
-                  </div>
-                )}
-
               </div>
 
-              {/* STEP 3: PAYMENT WITH LIVE FEE BREAKDOWN */}
+              {/* STEP 3: FOOD PREFERENCE (COMPLIMENTARY) */}
+              <div className="pt-4 border-t border-slate-800">
+                <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-800">
+                  <div className="flex items-center space-x-2">
+                    <Sparkles className="w-5 h-5 text-emerald-400" />
+                    <h3 className="font-tech text-base sm:text-lg font-bold text-white uppercase tracking-wider">
+                      3. Food Preference
+                    </h3>
+                  </div>
+                  <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 uppercase font-semibold">
+                    Complimentary • ₹0 (Included)
+                  </span>
+                </div>
+
+                <p className="text-xs text-slate-300 font-mono mb-3">
+                  Food and lunch refreshments are provided for all registered participants. Please select your preference below:
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Vegetarian */}
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, foodPreference: 'Veg' })}
+                    className={`p-4 rounded-2xl border text-left transition-all flex items-center justify-between ${
+                      formData.foodPreference === 'Veg'
+                        ? 'bg-emerald-500/15 border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.25)] text-white'
+                        : 'bg-space-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <span className="w-3 h-3 rounded-full bg-emerald-400 border border-emerald-300"></span>
+                        <span className="text-sm font-bold font-tech uppercase tracking-wider text-emerald-300">
+                          Vegetarian (Veg)
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 font-mono mt-1">
+                        Full vegetarian meal & refreshments
+                      </p>
+                    </div>
+                    <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border ${
+                      formData.foodPreference === 'Veg' ? 'bg-emerald-400 border-emerald-400 text-space-950' : 'border-slate-700'
+                    }`}>
+                      {formData.foodPreference === 'Veg' && <CheckCircle2 className="w-4 h-4" />}
+                    </div>
+                  </button>
+
+                  {/* Non-Vegetarian */}
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, foodPreference: 'Non-Veg' })}
+                    className={`p-4 rounded-2xl border text-left transition-all flex items-center justify-between ${
+                      formData.foodPreference === 'Non-Veg'
+                        ? 'bg-amber-500/15 border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.25)] text-white'
+                        : 'bg-space-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <span className="w-3 h-3 rounded-full bg-amber-400 border border-amber-300"></span>
+                        <span className="text-sm font-bold font-tech uppercase tracking-wider text-amber-300">
+                          Non-Vegetarian (Non-Veg)
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 font-mono mt-1">
+                        Full non-vegetarian meal & refreshments
+                      </p>
+                    </div>
+                    <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border ${
+                      formData.foodPreference === 'Non-Veg' ? 'bg-amber-400 border-amber-400 text-space-950' : 'border-slate-700'
+                    }`}>
+                      {formData.foodPreference === 'Non-Veg' && <CheckCircle2 className="w-4 h-4" />}
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* STEP 4: TEAM / MEMBER DETAILS (DYNAMIC BASED ON EVENTS & PARTICIPANTS) */}
+              {showTeamSection ? (
+                <div className="p-5 rounded-2xl bg-space-950/80 border border-slate-800 space-y-4">
+
+                  <div className="flex items-center justify-between flex-wrap gap-2 mb-2 pb-2 border-b border-slate-800">
+                    <div>
+                      <span className="text-xs font-mono uppercase text-slate-200 font-bold flex items-center space-x-1.5">
+                        <Users className="w-4 h-4 text-cyber-cyan" />
+                        <span>Team Details</span>
+                      </span>
+                      <p className="text-[11px] text-slate-400 font-mono mt-0.5">
+                        {isEsportsSelected
+                          ? 'E-Sports tournament requires exactly 4 players (1 Team Leader + 3 Teammates).'
+                          : isProjectExpoSelected
+                          ? 'Project Expo requires exactly 2 members (1 Team Leader + 1 Teammate).'
+                          : selectedNormalEvents.length > 0
+                          ? `Selected event allows ${minNormalRequired === maxNormalAllowed ? maxNormalAllowed : `${minNormalRequired} to ${maxNormalAllowed}`} members (${participantCount} registered @ ₹100 each = ₹${participantCount * 100}).`
+                          : `Team registration: ${participantCount} members (₹100 per member = ₹${participantCount * 100}).`}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleAddMember}
+                      disabled={
+                        (isEsportsSelected && formData.teamMembers.length >= 3) ||
+                        (isProjectExpoSelected && !isEsportsSelected && formData.teamMembers.length >= 1) ||
+                        formData.teamMembers.length + 1 >= maxAllowedTotalMembers
+                      }
+                      className="px-3 py-1.5 rounded-lg border border-dashed border-cyber-cyan/40 hover:border-cyber-cyan text-cyber-cyan text-xs font-mono flex items-center space-x-1 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>
+                        {isEsportsSelected
+                          ? 'Team Limit: 4 Players'
+                          : isProjectExpoSelected && !isEsportsSelected
+                          ? 'Team Limit: 2 Members'
+                          : formData.teamMembers.length + 1 >= maxAllowedTotalMembers
+                          ? `Max ${maxAllowedTotalMembers} Members Reached`
+                          : 'Add Teammate (+₹100)'}
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* Member #1: Team Leader from Step 1 */}
+                  <div className="p-3 rounded-xl bg-space-900/80 border border-cyber-cyan/30 flex items-center justify-between text-xs font-mono">
+                    <div className="flex items-center space-x-2">
+                      <span className="px-2 py-0.5 rounded bg-cyber-cyan/20 text-cyber-cyan font-bold text-[10px] uppercase">
+                        Member #1 (Leader)
+                      </span>
+                      <span className="text-white font-semibold">
+                        {formData.fullName || 'Leader name entered in Step 1'}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      {formData.mobile ? `+91 ${formData.mobile}` : 'Contact in Step 1'}
+                    </span>
+                  </div>
+
+                  {/* Optional Team Name */}
+                  <div>
+                    <label className="block text-[11px] font-mono text-slate-400 uppercase mb-1">
+                      Team Name (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Team Alpha / Neural Squad"
+                      value={formData.teamName}
+                      onChange={(e) => setFormData({ ...formData, teamName: e.target.value })}
+                      className="w-full bg-space-900 border border-slate-800 focus:border-cyber-cyan rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
+                    />
+                  </div>
+
+                  {/* Additional Teammate Input Fields (Members 2 to 4) */}
+                  {formData.teamMembers.length > 0 && (
+                    <div className="space-y-2.5">
+                      {formData.teamMembers.map((member, idx) => (
+                        <div key={idx} className="p-3 rounded-xl bg-space-900/60 border border-slate-800/80 flex flex-col sm:flex-row items-center gap-2">
+                          <span className="text-xs font-mono font-bold text-cyber-cyan shrink-0">
+                            Member #{idx + 2}
+                          </span>
+                          <input
+                            type="text"
+                            required
+                            placeholder="Member Full Name *"
+                            value={member.name}
+                            onChange={(e) => handleMemberChange(idx, 'name', e.target.value)}
+                            className="w-full sm:flex-1 bg-space-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500"
+                          />
+                          <input
+                            type="email"
+                            placeholder="Email (optional)"
+                            value={member.email}
+                            onChange={(e) => handleMemberChange(idx, 'email', e.target.value)}
+                            className="w-full sm:flex-1 bg-space-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500"
+                          />
+                          <input
+                            type="tel"
+                            maxLength={10}
+                            placeholder="Mobile (optional)"
+                            value={member.mobile}
+                            onChange={(e) => handleMemberChange(idx, 'mobile', e.target.value.replace(/\D/g, ''))}
+                            className="w-full sm:w-32 bg-space-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white font-mono placeholder-slate-500"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveMember(idx)}
+                            className="text-slate-500 hover:text-rose-400 p-1.5 shrink-0"
+                            title="Remove Teammate"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {errors.teamMembers && (
+                    <p className="text-rose-400 text-xs font-mono flex items-center">
+                      <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0" />
+                      <span>{errors.teamMembers}</span>
+                    </p>
+                  )}
+
+                  {/* Flexible Member Details Text Area */}
+                  <div>
+                    <label className="block text-[11px] font-mono text-slate-400 uppercase mb-1">
+                      Additional Member / Participation Notes (Flexible)
+                    </label>
+                    <textarea
+                      rows={2}
+                      placeholder="Provide any additional notes or team details here..."
+                      value={formData.flexibleMemberDetails}
+                      onChange={(e) => setFormData({ ...formData, flexibleMemberDetails: e.target.value })}
+                      className="w-full bg-space-900 border border-slate-800 focus:border-cyber-cyan rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none resize-none"
+                    ></textarea>
+                  </div>
+
+                </div>
+              ) : (
+                <div className="p-4 rounded-2xl bg-space-950/60 border border-slate-800 text-slate-400 text-xs font-mono flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                  <div className="flex items-center space-x-2">
+                    <User className="w-4 h-4 text-cyber-cyan shrink-0" />
+                    <span>
+                      Individual registration active: 1 person (Member #1). Fee: ₹100.
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-slate-500">
+                    Team selection unfolds dynamically when team events are selected above.
+                  </span>
+                </div>
+              )}
+
+              {/* STEP 5: PAYMENT WITH LIVE FEE BREAKDOWN */}
               <PaymentSection
                 utrNumber={utrNumber}
                 setUtrNumber={setUtrNumber}
@@ -1025,7 +1406,7 @@ export default function RegistrationForm({
                 feeBreakdown={feeBreakdown}
               />
 
-              {/* STEP 4: DECLARATION */}
+              {/* STEP 6: DECLARATION */}
               <div className="pt-4 border-t border-slate-800">
                 <label className="flex items-start space-x-3 cursor-pointer">
                   <input

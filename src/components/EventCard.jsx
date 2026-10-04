@@ -62,10 +62,21 @@ export default function EventCard({ event, onOpenDetails, onRegisterEvent }) {
           </div>
         </div>
 
-        {/* Event Name */}
-        <h3 className="text-xl sm:text-2xl font-bold font-tech text-white mb-2 group-hover:text-cyber-cyan transition-colors tracking-wide">
-          {event.name}
-        </h3>
+        {/* Event Name & Member Count Badge */}
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <h3 className="text-xl sm:text-2xl font-bold font-tech text-white group-hover:text-cyber-cyan transition-colors tracking-wide">
+            {event.name}
+          </h3>
+          {event.memberCount && (
+            <span className={`text-[10px] font-mono px-2.5 py-0.5 rounded-full shrink-0 mt-1 font-semibold border ${
+              isTechnical
+                ? 'bg-space-950/80 text-cyber-cyan border-cyber-cyan/30'
+                : 'bg-space-950/80 text-purple-300 border-purple-400/30'
+            }`}>
+              {event.memberCount}
+            </span>
+          )}
+        </div>
 
         {/* Short Neutral Description */}
         <p className="text-slate-300 text-xs sm:text-sm leading-relaxed mb-6 font-sans">

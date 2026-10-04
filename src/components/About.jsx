@@ -1,39 +1,39 @@
 import React from 'react';
-import { Cpu, Terminal, Award, Users, Sparkles, Binary, Calendar, Clock, MapPin } from 'lucide-react';
+import { Cpu, Terminal, Award, Users, Sparkles, Binary, Calendar, Clock, MapPin, CheckCircle2 } from 'lucide-react';
 
 export default function About() {
   const highlights = [
     {
       icon: Terminal,
-      title: '9 Technical Events',
-      desc: 'Competitions in code analysis, datathon modeling, synthetic media forensics, and algorithmic problem solving.',
+      title: '7 Technical Events',
+      desc: 'Competitions in code analysis, datathon modeling, deepfake detection, vibe coding, and algorithmic problem solving.',
       color: 'text-cyber-cyan',
       borderColor: 'border-cyber-cyan/30',
       bgColor: 'bg-cyber-cyan/10'
     },
     {
       icon: Binary,
-      title: 'Modern Development',
-      desc: 'Hands-on focus on emerging paradigms in artificial intelligence, data engineering, and software tools.',
+      title: '3 Non-Technical Arenas',
+      desc: 'Exciting competitions in E-Sports tournament, tool finder, and mystery escape room challenge.',
       color: 'text-cyber-purple',
       borderColor: 'border-cyber-purple/30',
       bgColor: 'bg-cyber-purple/10'
     },
     {
       icon: Award,
-      title: 'E-Sports Arena',
-      desc: 'Non-technical competitive gaming bracket for strategy, coordination, and team dynamics.',
+      title: 'Certificate Provided',
+      desc: 'Official verified symposium participation certificates awarded to all registered attendees.',
       color: 'text-amber-400',
       borderColor: 'border-amber-400/30',
       bgColor: 'bg-amber-400/10'
     },
     {
       icon: Users,
-      title: 'Academic Synergy',
-      desc: 'Collaborative exchange of knowledge, student innovation, and technical skills.',
-      color: 'text-sky-400',
-      borderColor: 'border-sky-400/30',
-      bgColor: 'bg-sky-400/10'
+      title: 'Food Provided',
+      desc: 'Complimentary high-energy lunch and refreshments provided for all registered participants.',
+      color: 'text-emerald-400',
+      borderColor: 'border-emerald-400/30',
+      bgColor: 'bg-emerald-400/10'
     }
   ];
 
@@ -63,7 +63,7 @@ export default function About() {
         </div>
 
         {/* Two-Column About Narrative */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center mb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center mb-12">
           
           {/* Left Column: Department Vision Card */}
           <div className="lg:col-span-7 cyber-glass rounded-3xl p-6 sm:p-10 border border-cyber-cyan/20 shadow-xl relative overflow-hidden">
@@ -105,7 +105,7 @@ export default function About() {
               <div className="text-xs font-mono text-slate-300 uppercase tracking-wider">
                 Total Events
               </div>
-              <div className="text-[11px] text-slate-400 mt-1">9 Tech + 1 Non-Tech</div>
+              <div className="text-[11px] text-slate-400 mt-1">7 Tech + 3 Non-Tech</div>
             </div>
 
             <div className="cyber-glass rounded-2xl p-5 border border-cyber-purple/25 text-center flex flex-col justify-center">
@@ -140,6 +140,43 @@ export default function About() {
 
           </div>
 
+        </div>
+
+        {/* Certificate Provided & Food Provided Dedicated Banner */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-16">
+          <div className="cyber-glass rounded-2xl p-4 sm:p-5 border border-cyber-cyan/40 flex items-center space-x-4 shadow-[0_0_20px_rgba(0,240,255,0.12)]">
+            <div className="w-12 h-12 rounded-xl bg-cyber-cyan/15 border border-cyber-cyan/35 text-cyber-cyan flex items-center justify-center shrink-0">
+              <Award className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className="text-base sm:text-lg font-bold font-tech text-white uppercase tracking-wide">
+                  Certificate Provided
+                </span>
+                <CheckCircle2 className="w-4 h-4 text-cyber-cyan shrink-0" />
+              </div>
+              <p className="text-xs text-slate-300 font-mono mt-0.5">
+                Official verified symposium certificates provided for all participants and winners.
+              </p>
+            </div>
+          </div>
+
+          <div className="cyber-glass rounded-2xl p-4 sm:p-5 border border-cyber-purple/40 flex items-center space-x-4 shadow-[0_0_20px_rgba(168,85,247,0.12)]">
+            <div className="w-12 h-12 rounded-xl bg-cyber-purple/15 border border-cyber-purple/35 text-cyber-purple flex items-center justify-center shrink-0">
+              <Sparkles className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className="text-base sm:text-lg font-bold font-tech text-white uppercase tracking-wide">
+                  Food Provided
+                </span>
+                <CheckCircle2 className="w-4 h-4 text-purple-400 shrink-0" />
+              </div>
+              <p className="text-xs text-slate-300 font-mono mt-0.5">
+                Complimentary food and lunch refreshments provided for all registered attendees.
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Feature Highlights Grid */}

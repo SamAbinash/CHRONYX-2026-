@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  X, Clock, ArrowRight, BookOpen, FileText,
+  X, Clock, ArrowRight, BookOpen, FileText, Award,
   Terminal, Database, ScanFace, Cpu, Sparkles, Binary, SearchCode, Eye, Brain, Gamepad2
 } from 'lucide-react';
 
@@ -166,13 +166,20 @@ export default function EventModal({ event, onClose, onRegisterEvent }) {
             <IconComponent className="w-6 h-6" />
           </div>
           <div>
-            <span className={`inline-block text-[11px] font-mono font-semibold px-3 py-1 rounded-full uppercase tracking-wider mb-1.5 ${
-              isTechnical
-                ? 'bg-cyber-cyan/15 text-cyber-cyan border border-cyber-cyan/30'
-                : 'bg-cyber-purple/15 text-purple-300 border border-cyber-purple/30'
-            }`}>
-              {event.category} Event
-            </span>
+            <div className="flex items-center flex-wrap gap-1.5 mb-1.5">
+              <span className={`inline-block text-[11px] font-mono font-semibold px-3 py-1 rounded-full uppercase tracking-wider ${
+                isTechnical
+                  ? 'bg-cyber-cyan/15 text-cyber-cyan border border-cyber-cyan/30'
+                  : 'bg-cyber-purple/15 text-purple-300 border border-cyber-purple/30'
+              }`}>
+                {event.category} Event
+              </span>
+              {event.memberCount && (
+                <span className="inline-block text-[11px] font-mono font-semibold px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-space-950 border border-slate-700 text-slate-300">
+                  {event.memberCount}
+                </span>
+              )}
+            </div>
             <h3 className="text-2xl sm:text-3xl font-black font-tech text-white">
               {event.name}
             </h3>
@@ -180,7 +187,7 @@ export default function EventModal({ event, onClose, onRegisterEvent }) {
         </div>
 
         {/* Event Verified Meta */}
-        <div className="grid grid-cols-3 gap-2 p-3 rounded-2xl bg-space-950 border border-slate-800/80 text-center mb-6 text-xs font-mono">
+        <div className="grid grid-cols-3 gap-2 p-3 rounded-2xl bg-space-950 border border-slate-800/80 text-center mb-3 text-xs font-mono">
           <div>
             <p className="text-[10px] text-slate-400 uppercase">Date</p>
             <p className="font-bold text-white mt-0.5">10-10-2026</p>
@@ -192,6 +199,18 @@ export default function EventModal({ event, onClose, onRegisterEvent }) {
           <div>
             <p className="text-[10px] text-slate-400 uppercase">Venue</p>
             <p className="font-bold text-slate-200 mt-0.5 truncate">Campus</p>
+          </div>
+        </div>
+
+        {/* Provisions Badge Bar */}
+        <div className="grid grid-cols-2 gap-2 mb-6 text-xs font-mono">
+          <div className="p-2.5 rounded-xl bg-space-950 border border-cyber-cyan/30 text-center flex items-center justify-center space-x-1.5">
+            <Award className="w-3.5 h-3.5 text-cyber-cyan shrink-0" />
+            <span className="text-cyber-cyan font-bold">Certificate Provided</span>
+          </div>
+          <div className="p-2.5 rounded-xl bg-space-950 border border-cyber-purple/30 text-center flex items-center justify-center space-x-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+            <span className="text-purple-300 font-bold">Food Provided</span>
           </div>
         </div>
 

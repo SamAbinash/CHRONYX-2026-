@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   Upload, CheckCircle2, AlertCircle, Image as ImageIcon, X, CreditCard,
-  Gamepad2, Store, Users, User
+  Gamepad2, Store, Users, User, Cpu
 } from 'lucide-react';
 
 export default function PaymentSection({
@@ -79,24 +79,34 @@ export default function PaymentSection({
               </span>
             </div>
             <span className="text-[10px] font-mono text-cyber-cyan border border-cyber-cyan/30 px-2.5 py-0.5 rounded-full uppercase bg-cyber-cyan/10">
-              {feeBreakdown.registrationType === 'team'
-                ? 'Team (Max 4)'
-                : (feeBreakdown.hasEsports && !feeBreakdown.hasOtherEvents ? 'E-Sports (4 Players)' : 'Individual (1 Person)')}
+              {feeBreakdown.isTeam
+                ? `Team (${feeBreakdown.participantCount || 1} ${feeBreakdown.participantCount === 1 ? 'Member' : 'Members'})`
+                : 'Individual (1 Person)'}
             </span>
           </div>
 
           <div className="space-y-2 text-xs font-mono">
-            {feeBreakdown.mainFee > 0 && (
+            {feeBreakdown.hasGeneralEvents && (
               <div className="flex items-center justify-between text-slate-300">
                 <span className="flex items-center space-x-2">
-                  {feeBreakdown.registrationType === 'team' ? (
+                  {feeBreakdown.isTeam ? (
                     <Users className="w-3.5 h-3.5 text-cyber-purple shrink-0" />
                   ) : (
                     <User className="w-3.5 h-3.5 text-cyber-cyan shrink-0" />
                   )}
-                  <span>{feeBreakdown.mainLabel}</span>
+                  <span>{feeBreakdown.normalLabel || 'General Symposium Events Pass'}</span>
                 </span>
-                <span className="font-bold text-white">₹{feeBreakdown.mainFee}</span>
+                <span className="font-bold text-white">₹{feeBreakdown.generalFee}</span>
+              </div>
+            )}
+
+            {feeBreakdown.hasProjectExpo && (
+              <div className="flex items-center justify-between text-slate-300">
+                <span className="flex items-center space-x-2">
+                  <Cpu className="w-3.5 h-3.5 text-cyber-cyan shrink-0" />
+                  <span>Project Expo (₹200 / team of 2)</span>
+                </span>
+                <span className="font-bold text-cyber-cyan">₹{feeBreakdown.projectExpoFee}</span>
               </div>
             )}
 
@@ -104,7 +114,7 @@ export default function PaymentSection({
               <div className="flex items-center justify-between text-slate-300">
                 <span className="flex items-center space-x-2">
                   <Gamepad2 className="w-3.5 h-3.5 text-cyber-purple shrink-0" />
-                  <span>E-Sports Tournament (₹50 / team of 4)</span>
+                  <span>E-Sports Tournament (₹400 / team of 4)</span>
                 </span>
                 <span className="font-bold text-cyber-purple">₹{feeBreakdown.esportsFee}</span>
               </div>

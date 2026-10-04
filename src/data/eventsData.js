@@ -6,6 +6,9 @@ export const EVENTS_DATA = [
     category: 'Technical',
     shortDescription: 'Algorithmic problem-solving and code analysis challenge.',
     icon: 'Terminal',
+    memberCount: '1 to 2 Members',
+    minMembers: 1,
+    maxMembers: 2,
     details: [
       'Participants receive a series of codes, clues and puzzles.',
       'Each challenge leads to the next stage.',
@@ -21,6 +24,9 @@ export const EVENTS_DATA = [
     category: 'Technical',
     shortDescription: 'Data science and analytical modeling competition.',
     icon: 'Database',
+    memberCount: '2 to 4 Members',
+    minMembers: 2,
+    maxMembers: 4,
     details: [
       'Team Size: 1–3 participants.',
       'Duration: 2–2.5 hours.',
@@ -36,6 +42,9 @@ export const EVENTS_DATA = [
     category: 'Technical',
     shortDescription: 'Digital media analysis and synthetic content detection challenge.',
     icon: 'ScanFace',
+    memberCount: '2 to 4 Members',
+    minMembers: 2,
+    maxMembers: 4,
     details: [
       'Real vs AI-generated images, audio and videos will be shown.',
       'Participants must identify whether each clip is real or AI-generated.',
@@ -51,6 +60,11 @@ export const EVENTS_DATA = [
     category: 'Technical',
     shortDescription: 'Demonstration and exhibition of innovative student projects.',
     icon: 'Cpu',
+    memberCount: '2 Members',
+    minMembers: 2,
+    maxMembers: 2,
+    exactMembers: 2,
+    fee: 200,
     details: [
       'Open Innovation: Present any innovative project or idea.',
       'Build & Demonstrate: Showcase the project with a working demo or prototype.',
@@ -64,6 +78,9 @@ export const EVENTS_DATA = [
     category: 'Technical',
     shortDescription: 'Rapid coding and modern development challenge.',
     icon: 'Sparkles',
+    memberCount: '1 to 2 Members',
+    minMembers: 1,
+    maxMembers: 2,
     details: [
       'Create a project based on the given theme/problem statement.',
       'Time Limit: 3–4 hours.',
@@ -78,6 +95,9 @@ export const EVENTS_DATA = [
     category: 'Technical',
     shortDescription: 'Visual problem solving, puzzles, and cryptographic pattern decoding.',
     icon: 'Eye',
+    memberCount: '1 to 4 Members',
+    minMembers: 1,
+    maxMembers: 4,
     details: [
       'Participants solve visual puzzles and decode hidden patterns.',
       'Use observation, logical thinking and pattern recognition.',
@@ -91,6 +111,9 @@ export const EVENTS_DATA = [
     category: 'Technical',
     shortDescription: 'Technical quiz and logical problem-solving competition.',
     icon: 'Brain',
+    memberCount: '1 to 2 Members',
+    minMembers: 1,
+    maxMembers: 2,
     details: [
       'Test logical thinking, memory and problem-solving skills.',
       'Solve each challenge within the given time.',
@@ -107,6 +130,11 @@ export const EVENTS_DATA = [
     category: 'Non-Technical',
     shortDescription: 'Competitive gaming arena tournament.',
     icon: 'Gamepad2',
+    memberCount: '1 to 4 Members',
+    minMembers: 4,
+    maxMembers: 4,
+    exactMembers: 4,
+    fee: 400,
     details: [
       'Game: Free Fire – BR Champion Rush.',
       'Team Size: 4 players.',
@@ -134,6 +162,9 @@ export const EVENTS_DATA = [
     category: 'Non-Technical',
     shortDescription: 'Technical search and software tool discovery contest.',
     icon: 'SearchCode',
+    memberCount: '1 to 3 Members',
+    minMembers: 1,
+    maxMembers: 3,
     details: [
       'Identify the correct tool/software for each given task.',
       'Time Limit: 2–3 minutes per challenge.',
@@ -148,6 +179,9 @@ export const EVENTS_DATA = [
     category: 'Non-Technical',
     shortDescription: 'Interactive mystery scenario and collaborative problem-solving challenge.',
     icon: 'DoorOpen',
+    memberCount: '1 to 2 Members',
+    minMembers: 1,
+    maxMembers: 2,
     details: [
       'Teams enter a mystery scenario.',
       'Participants receive clues, puzzles, codes and riddles.',

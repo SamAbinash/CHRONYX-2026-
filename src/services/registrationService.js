@@ -63,7 +63,11 @@ export const INITIAL_REGISTRATIONS = [
     },
     status: STATUS_VALUES.CONFIRMED,
     created_at: '2026-10-01T10:30:00.000Z',
-    remarks: 'Registration confirmed. Please carry your college ID card on event day.'
+    remarks: 'Registration confirmed. Please carry your college ID card on event day.',
+    amount: 200,
+    registration_type: 'team',
+    stall_booking: false,
+    food_preference: 'Veg'
   },
   {
     registration_id: 'CHX26-0002',
@@ -75,8 +79,7 @@ export const INITIAL_REGISTRATIONS = [
     year: 'IV Year',
     event: 'Project Expo',
     team_members: [
-      { name: 'Kavitha M', email: 'kavitha.m@example.com', mobile: '9845012346' },
-      { name: 'Harish V', email: 'harish.v@example.com', mobile: '9845012347' }
+      { name: 'Kavitha M', email: 'kavitha.m@example.com', mobile: '9845012346' }
     ],
     utr: '428909876543',
     payment_screenshot: {
@@ -88,7 +91,11 @@ export const INITIAL_REGISTRATIONS = [
     },
     status: STATUS_VALUES.VERIFICATION_PENDING,
     created_at: '2026-10-02T11:20:00.000Z',
-    remarks: 'Transaction ID is under reconciliation with accounts desk. Verification pending.'
+    remarks: 'Transaction ID is under reconciliation with accounts desk. Verification pending.',
+    amount: 200,
+    registration_type: 'team',
+    stall_booking: false,
+    food_preference: 'Veg'
   },
   {
     registration_id: 'CHX26-0003',
@@ -114,7 +121,11 @@ export const INITIAL_REGISTRATIONS = [
     },
     status: STATUS_VALUES.SUBMITTED,
     created_at: '2026-10-02T16:45:00.000Z',
-    remarks: 'Registration documents submitted. Awaiting verification queue.'
+    remarks: 'Registration documents submitted. Awaiting verification queue.',
+    amount: 400,
+    registration_type: 'team',
+    stall_booking: false,
+    food_preference: 'Non-Veg'
   },
   {
     registration_id: 'CHX26-0004',
@@ -136,7 +147,11 @@ export const INITIAL_REGISTRATIONS = [
     },
     status: STATUS_VALUES.REJECTED,
     created_at: '2026-09-30T13:10:00.000Z',
-    remarks: 'Invalid transaction reference number or mismatched screenshot. Please re-register or reach out to the student coordinators.'
+    remarks: 'Invalid transaction reference number or mismatched screenshot. Please re-register or reach out to the student coordinators.',
+    amount: 100,
+    registration_type: 'individual',
+    stall_booking: false,
+    food_preference: 'Veg'
   }
 ];
 
@@ -155,6 +170,13 @@ function enhanceRecord(record) {
     mobile: record.phone,
     events: eventsArray,
     utrNumber: record.utr,
+    teamName: record.team_name || record.teamName || '',
+    teamMembers: record.team_members || record.teamMembers || [],
+    foodPreference: record.food_preference || record.foodPreference || 'Veg',
+    food_preference: record.food_preference || record.foodPreference || 'Veg',
+    amount: record.amount !== undefined ? record.amount : 0,
+    registration_type: record.registration_type || record.registrationType || 'individual',
+    stall_booking: Boolean(record.stall_booking || record.bookStall),
     submittedAt: new Date(record.created_at).toLocaleDateString('en-GB', {
       day: '2-digit', month: 'short', year: 'numeric',
       hour: '2-digit', minute: '2-digit', hour12: true
@@ -240,6 +262,8 @@ export async function createRegistration({
   year,
   selectedEvents = [],
   teamMembers = [],
+  teamName = '',
+  foodPreference = 'Veg',
   flexibleMemberDetails = '',
   utr,
   screenshotFile = null,
@@ -299,6 +323,8 @@ export async function createRegistration({
     year: year || 'III Year',
     event: eventString,
     team_members: formattedTeamMembers,
+    team_name: (teamName || '').trim(),
+    food_preference: foodPreference || 'Veg',
     utr: utr.trim(),
     payment_screenshot: screenshotMeta || {
       filename: 'pending_attachment',
@@ -446,7 +472,12 @@ export function exportRegistrationsToCSV(authSecret) {
     'Team Members',
     'UTR',
     'Status',
-    'Created Date'
+    'Created Date',
+    'Amount',
+    'Registration Type',
+    'Team Name',
+    'Stall Booking',
+    'Food Preference'
   ];
 
   const escapeCsv = (str) => {
@@ -472,7 +503,12 @@ export function exportRegistrationsToCSV(authSecret) {
       escapeCsv(teamMembersText),
       escapeCsv(r.utr || r.utrNumber),
       escapeCsv(r.status),
-      escapeCsv(r.created_at)
+      escapeCsv(r.created_at),
+      escapeCsv(r.amount !== undefined ? r.amount : 0),
+      escapeCsv(r.registration_type || r.registrationType || 'individual'),
+      escapeCsv(r.team_name || r.teamName || ''),
+      escapeCsv(r.stall_booking ? 'Yes' : 'No'),
+      escapeCsv(r.food_preference || r.foodPreference || 'Veg')
     ].join(',');
   });
 
@@ -539,9 +575,14 @@ export const saveNewRegistration = (data) => {
     year: data.year,
     selectedEvents: data.events || [data.event],
     teamMembers: data.teamMembers || data.team_members,
+    teamName: data.teamName || data.team_name || '',
+    foodPreference: data.foodPreference || data.food_preference || 'Veg',
     flexibleMemberDetails: data.flexibleMemberDetails || '',
     utr: data.utrNumber || data.utr,
-    screenshotFile: data.screenshotFile || null
+    screenshotFile: data.screenshotFile || null,
+    amount: data.amount || 0,
+    registrationType: data.registrationType || data.registration_type || 'individual',
+    bookStall: data.bookStall || data.stall_booking || false
   });
 };
 
