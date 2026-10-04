@@ -16,6 +16,8 @@
     background-color: #030712;
     color: #f1f5f9;
     overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   /* Custom Cyber Scrollbar */

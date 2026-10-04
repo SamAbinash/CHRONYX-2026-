@@ -58,7 +58,7 @@ export default function EventsSection({ onOpenDetails, onRegisterEvent }) {
           </h2>
 
           <p className="text-slate-400 text-sm sm:text-base">
-            9 Technical Events and 1 Non-Technical Event. Select any event to review details or register.
+            {counts.technical} Technical Events and {counts.nonTechnical} Non-Technical Events. Select any event to review details or register.
           </p>
         </div>
 

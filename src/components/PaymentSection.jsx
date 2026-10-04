@@ -144,39 +144,47 @@ export default function PaymentSection({
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start mt-6">
 
-        {/* Left Column: Clearly Visible QR Placeholder Box */}
-        <div className="md:col-span-5 cyber-glass rounded-2xl p-6 border border-cyber-cyan/30 text-center relative overflow-hidden flex flex-col items-center justify-center min-h-[260px]">
+        {/* Left Column: Official CHRONYX Payment QR Code */}
+        <div className="md:col-span-5 cyber-glass rounded-2xl p-5 border border-cyber-cyan/30 text-center relative overflow-hidden flex flex-col items-center justify-center">
 
-          {/* Futuristic Placeholder Box */}
-          <div className="w-full max-w-[240px] aspect-square rounded-2xl bg-space-950/90 border-2 border-dashed border-cyber-cyan/50 p-6 flex flex-col items-center justify-center shadow-[0_0_20px_rgba(0,240,255,0.15)] relative">
+          {/* Futuristic QR Frame */}
+          <div className="w-full max-w-[260px] rounded-2xl bg-space-950/95 border border-cyber-cyan/40 p-3 flex flex-col items-center justify-center shadow-[0_0_25px_rgba(0,240,255,0.18)] relative group">
 
-            <div className="w-12 h-12 rounded-xl bg-cyber-cyan/10 border border-cyber-cyan/30 flex items-center justify-center text-cyber-cyan mb-3">
-              <CreditCard className="w-6 h-6 animate-pulse" />
+            {/* Corner accents */}
+            <div className="absolute top-2 left-2 w-3.5 h-3.5 border-t-2 border-l-2 border-cyber-cyan z-10 pointer-events-none"></div>
+            <div className="absolute top-2 right-2 w-3.5 h-3.5 border-t-2 border-r-2 border-cyber-cyan z-10 pointer-events-none"></div>
+            <div className="absolute bottom-2 left-2 w-3.5 h-3.5 border-b-2 border-l-2 border-cyber-cyan z-10 pointer-events-none"></div>
+            <div className="absolute bottom-2 right-2 w-3.5 h-3.5 border-b-2 border-r-2 border-cyber-cyan z-10 pointer-events-none"></div>
+
+            {/* QR Image */}
+            <div className="w-full overflow-hidden rounded-xl bg-black relative border border-slate-800">
+              <img
+                src="/qr/chronyx-payment-qr.jpeg"
+                alt="CHRONYX 2026 Official Payment QR Code"
+                className="w-full h-auto object-contain rounded-xl hover:scale-[1.02] transition-transform duration-300"
+                loading="eager"
+              />
             </div>
 
-            <p className="font-tech font-bold text-xs sm:text-sm text-white tracking-wider uppercase leading-snug px-2">
-              OFFICIAL UPI QR WILL BE ADDED HERE
-            </p>
-
-            <div className="mt-2.5 px-3 py-1 rounded-lg bg-cyber-cyan/15 border border-cyber-cyan/30">
-              <span className="text-xs font-mono font-black text-cyber-cyan">
-                Amount: ₹{totalAmount}
+            {/* Dynamic Payable Amount Badge */}
+            <div className="mt-3 w-full py-2 px-3 rounded-xl bg-cyber-cyan/15 border border-cyber-cyan/30 flex items-center justify-between text-xs font-mono">
+              <span className="text-slate-300 text-[11px] font-semibold uppercase tracking-wider">
+                Total Payable:
+              </span>
+              <span className="text-base font-black font-tech text-cyber-cyan tracking-wider">
+                ₹{totalAmount}
               </span>
             </div>
 
-            <span className="text-[10px] font-mono text-slate-500 mt-2 block">
-              Official QR Placeholder
-            </span>
-
-            {/* Corner accents */}
-            <div className="absolute top-2 left-2 w-3 h-3 border-t-2 border-l-2 border-cyber-cyan"></div>
-            <div className="absolute top-2 right-2 w-3 h-3 border-t-2 border-r-2 border-cyber-cyan"></div>
-            <div className="absolute bottom-2 left-2 w-3 h-3 border-b-2 border-l-2 border-cyber-cyan"></div>
-            <div className="absolute bottom-2 right-2 w-3 h-3 border-b-2 border-r-2 border-cyber-cyan"></div>
+            {/* Verified Coordinator UPI Telemetry */}
+            <div className="mt-2 flex items-center space-x-1.5 text-[10px] font-mono text-slate-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>UPI ID: 9585605199@pthdfc</span>
+            </div>
           </div>
 
-          <p className="text-[11px] font-mono text-slate-400 mt-4 max-w-xs">
-            Scan using your preferred UPI app to pay ₹{totalAmount} once the official QR code is issued.
+          <p className="text-[11px] font-mono text-slate-400 mt-3.5 max-w-xs leading-relaxed">
+            Scan using Google Pay, PhonePe, Paytm, or any UPI app to pay <span className="text-cyber-cyan font-bold">₹{totalAmount}</span>.
           </p>
 
         </div>

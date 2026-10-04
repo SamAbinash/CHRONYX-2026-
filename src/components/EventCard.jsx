@@ -88,19 +88,19 @@ export default function EventCard({ event, onOpenDetails, onRegisterEvent }) {
       {/* Control Panel Action Buttons */}
       <div className="space-y-2 pt-3 border-t border-slate-800/80 relative z-10">
         
-        {/* Rules & Details - Coming Soon */}
+        {/* Rules & Details */}
         <button
           onClick={() => onOpenDetails(event)}
           className="w-full py-2.5 px-3 rounded-xl bg-space-950/80 border border-slate-700/80 hover:border-cyber-cyan/50 text-slate-300 hover:text-white text-xs font-mono font-medium transition-all flex items-center justify-center space-x-1.5 group/btn"
         >
-          <Clock className="w-3.5 h-3.5 text-cyber-cyan group-hover/btn:rotate-45 transition-transform" />
-          <span>Rules & Details – Coming Soon</span>
+          <FileText className="w-3.5 h-3.5 text-cyber-cyan group-hover/btn:scale-110 transition-transform" />
+          <span>View Rules & Details</span>
         </button>
 
         {/* Register CTA */}
         <button
           onClick={() => onRegisterEvent(event.name)}
-          className={`w-full py-2.5 px-3 rounded-xl font-mono text-xs font-bold transition-all duration-200 flex items-center justify-center space-x-1.5 text-space-950 shadow-md ${
+          className={`w-full py-2.5 px-3 rounded-xl font-tech text-xs sm:text-sm font-bold uppercase tracking-wider transition-all duration-200 flex items-center justify-center space-x-1.5 text-space-950 shadow-md hover:scale-[1.02] active:scale-[0.98] ${
             isTechnical
               ? 'bg-cyber-cyan hover:bg-sky-300 hover:shadow-[0_0_20px_rgba(0,240,255,0.6)]'
               : 'bg-gradient-to-r from-purple-400 to-pink-400 hover:shadow-[0_0_20px_rgba(168,85,247,0.6)]'
