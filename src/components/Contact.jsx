@@ -39,6 +39,15 @@ export default function Contact() {
       color: 'border-cyber-cyan text-cyber-cyan',
       phone: '9342049991',
       whatsapp: '9342049991'
+    },
+    {
+      role: 'Student Coordinator',
+      title: 'Gopika',
+      department: 'Department of Artificial Intelligence and Data Science',
+      badge: 'Student Lead',
+      color: 'border-cyber-cyan text-cyber-cyan',
+      phone: '8056085364',
+      whatsapp: '8056085364'
     }
   ];
 
@@ -84,7 +93,7 @@ export default function Contact() {
         </div>
 
         {/* Coordinators Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
           {coordinators.map((c, idx) => (
             <div
               key={idx}

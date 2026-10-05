@@ -13,7 +13,7 @@ import EventModal from './components/EventModal';
 import PassModal from './components/PassModal';
 import OrganizerDashboard from './pages/OrganizerDashboard';
 import NeuralBackground from './components/NeuralBackground';
-import { Ticket, Search } from 'lucide-react';
+import { Ticket, Search, HelpCircle } from 'lucide-react';
 
 export default function App() {
   const [activeSection, setActiveSection] = useState('home');
@@ -227,6 +227,25 @@ export default function App() {
           <Ticket className="w-5 h-5" />
           <span className="hidden group-hover:inline-block ml-2 text-xs font-tech font-black tracking-wider uppercase pr-1">
             REGISTER PASS
+          </span>
+        </button>
+      </div>
+
+      {/* Floating Query / Help Button (Quick Access to Contact Coordinators) */}
+      <div className="fixed bottom-6 left-6 z-40 print:hidden">
+        <button
+          onClick={() => scrollToSection('contact')}
+          aria-label="Have a query? Contact us"
+          className="p-3 sm:px-4 sm:py-3 rounded-2xl cyber-glass border border-cyber-cyan/40 text-cyber-cyan hover:text-white hover:bg-cyber-cyan/20 transition-all shadow-lg shadow-cyber-cyan/15 hover:shadow-cyber-cyan/35 hover:scale-105 flex items-center space-x-2 group relative overflow-hidden"
+          title="Have a query? Contact us"
+        >
+          <span className="w-2 h-2 rounded-full bg-cyber-cyan animate-pulse"></span>
+          <HelpCircle className="w-5 h-5 shrink-0" />
+          <span className="hidden sm:inline-block text-xs font-tech font-bold tracking-wider uppercase">
+            HAVE A QUERY?
+          </span>
+          <span className="sm:hidden text-xs font-mono font-bold">
+            QUERY
           </span>
         </button>
       </div>

@@ -77,12 +77,12 @@ export default function RegistrationForm({
   // 1. Individual registration: 1 person = ₹100
   // 2. Normal team/group registration: Each participant costs ₹100 (2 = ₹200, 3 = ₹300, 4 = ₹400)
   // 3. Special event pricing:
-  //    - E-Sports: ₹400 per 4-member team + ₹50 additional charge = ₹450 total
+  //    - E-Sports: ₹400 per 4-member team total
   //    - Project Expo: ₹200 per 2-member team
   //    - Stall: ₹150 (separate optional add-on)
   //    - Food: ₹0 (complimentary)
   // 4. Avoid duplicate charging:
-  //    - E-Sports must remain ₹450 total (₹400 team + ₹50 charge), not ₹100 × 4 + ₹450
+  //    - E-Sports must remain ₹400 total, not ₹100 × 4 + ₹400
   //    - Project Expo must remain ₹200 total, not ₹100 × 2 + ₹200
   //    - Stall adds ₹150 separately
   const feeBreakdown = (() => {
@@ -91,8 +91,8 @@ export default function RegistrationForm({
     let hasNormalFee = false;
 
     const esportsTeamFee = isEsportsSelected ? 400 : 0;
-    const esportsCharge = isEsportsSelected ? 50 : 0;
-    const esportsFee = isEsportsSelected ? 450 : 0;
+    const esportsCharge = 0;
+    const esportsFee = isEsportsSelected ? 400 : 0;
     const projectExpoFee = isProjectExpoSelected ? 200 : 0;
     const stallFee = formData.bookStall ? 150 : 0;
 
@@ -106,7 +106,7 @@ export default function RegistrationForm({
         normalLabel = `Team Registration (${participantCount} Members @ ₹100 each)`;
       }
     } else {
-      // Special events are selected. E-Sports is ₹450 total (₹400 team + ₹50 charge), Project Expo is ₹200 total.
+      // Special events are selected. E-Sports is ₹400 total, Project Expo is ₹200 total.
       // Normal fee is set to 0 to prevent duplicate charging.
       hasNormalFee = false;
       normalFee = 0;
@@ -146,12 +146,15 @@ export default function RegistrationForm({
           if (preSelectedEvent === 'E-Sports') {
             updatedType = 'team';
             while (updatedMembers.length < 3) {
-              updatedMembers.push({ name: '', email: '', mobile: '' });
+              updatedMembers.push({ name: '', foodPreference: 'Veg' });
+            }
+            if (updatedMembers.length > 3) {
+              updatedMembers = updatedMembers.slice(0, 3);
             }
           } else if (preSelectedEvent === 'Project Expo') {
             updatedType = 'team';
             if (!updatedEvents.includes('E-Sports') && updatedMembers.length < 1) {
-              updatedMembers.push({ name: '', email: '', mobile: '' });
+              updatedMembers.push({ name: '', email: '', mobile: '', foodPreference: 'Veg' });
             }
           }
 
@@ -225,12 +228,19 @@ export default function RegistrationForm({
         if (eventName === 'E-Sports') {
           updatedType = 'team';
           while (updatedMembers.length < 3) {
-            updatedMembers.push({ name: '', email: '', mobile: '' });
+            updatedMembers.push({ name: '', foodPreference: 'Veg' });
           }
+          if (updatedMembers.length > 3) {
+            updatedMembers = updatedMembers.slice(0, 3);
+          }
+          updatedMembers = updatedMembers.map(m => ({
+            name: m.name || '',
+            foodPreference: m.foodPreference || 'Veg'
+          }));
         } else if (eventName === 'Project Expo') {
           updatedType = 'team';
           if (!updatedEvents.includes('E-Sports') && updatedMembers.length < 1) {
-            updatedMembers.push({ name: '', email: '', mobile: '' });
+            updatedMembers.push({ name: '', email: '', mobile: '', foodPreference: 'Veg' });
           }
         }
       }
@@ -246,6 +256,39 @@ export default function RegistrationForm({
       setErrors(prev => ({ ...prev, selectedEvents: null }));
     }
   };
+
+  // When E-Sports is active, ensure exactly 3 teammates with valid foodPreference
+  useEffect(() => {
+    if (isEsportsSelected) {
+      setFormData(prev => {
+        let members = [...prev.teamMembers];
+        let changed = false;
+        while (members.length < 3) {
+          members.push({ name: '', foodPreference: 'Veg' });
+          changed = true;
+        }
+        if (members.length > 3) {
+          members = members.slice(0, 3);
+          changed = true;
+        }
+        members = members.map(m => {
+          if (!m.foodPreference) {
+            changed = true;
+            return { ...m, foodPreference: 'Veg' };
+          }
+          return m;
+        });
+        if (changed || prev.registrationType !== 'team') {
+          return {
+            ...prev,
+            registrationType: 'team',
+            teamMembers: members
+          };
+        }
+        return prev;
+      });
+    }
+  }, [isEsportsSelected]);
 
   // Team member handlers
   const handleAddMember = () => {
@@ -273,7 +316,7 @@ export default function RegistrationForm({
     setFormData(prev => ({
       ...prev,
       registrationType: 'team',
-      teamMembers: [...prev.teamMembers, { name: '', email: '', mobile: '' }]
+      teamMembers: [...prev.teamMembers, { name: '', foodPreference: 'Veg', email: '', mobile: '' }]
     }));
     if (errors.teamMembers) {
       setErrors(prev => ({ ...prev, teamMembers: null }));
@@ -347,12 +390,19 @@ export default function RegistrationForm({
       newErrors.selectedEvents = 'Please select at least one event or stall booking.';
     }
 
+    // Food Preference validation
+    if (!formData.foodPreference || !['Veg', 'Non-Veg'].includes(formData.foodPreference)) {
+      newErrors.foodPreference = 'Please select food preference (Veg or Non-Veg).';
+    }
+
     // E-Sports requires exactly 4 members total (1 leader + 3 teammates)
     if (isEsportsSelected) {
       if (formData.teamMembers.length !== 3) {
         newErrors.teamMembers = 'E-Sports tournament requires a team of exactly 4 players (1 Team Leader + 3 Teammates). Please provide details for all 3 teammates.';
       } else if (formData.teamMembers.some(m => !m.name || !m.name.trim())) {
         newErrors.teamMembers = 'Please enter full names for all 3 E-Sports teammates.';
+      } else if (formData.teamMembers.some(m => !m.foodPreference || !['Veg', 'Non-Veg'].includes(m.foodPreference))) {
+        newErrors.teamMembers = 'Please select food preference (Veg or Non-Veg) for all teammates.';
       }
     }
 
@@ -415,8 +465,15 @@ export default function RegistrationForm({
         college: formData.college,
         department: formData.department,
         year: formData.year,
-        selectedEvents: formData.selectedEvents,
-        teamMembers: formData.teamMembers.filter(m => m.name && m.name.trim() !== ''),
+        teamMembers: formData.teamMembers
+          .filter(m => m.name && m.name.trim() !== '')
+          .map(m => ({
+            name: m.name.trim(),
+            foodPreference: m.foodPreference || 'Veg',
+            food_preference: m.foodPreference || 'Veg',
+            ...(m.email ? { email: m.email.trim() } : {}),
+            ...(m.mobile ? { mobile: m.mobile.trim() } : {})
+          })),
         teamName: formData.teamName,
         foodPreference: formData.foodPreference,
         flexibleMemberDetails: formData.flexibleMemberDetails,
@@ -963,7 +1020,7 @@ export default function RegistrationForm({
                             <Gamepad2 className="w-4 h-4" />
                             <span>E-Sports</span>
                           </span>
-                          <span className="text-sm font-black font-tech text-cyber-purple">₹450 / team</span>
+                          <span className="text-sm font-black font-tech text-cyber-purple">₹400 / team</span>
                         </div>
                         <div className="flex flex-wrap gap-1.5 mb-2">
                           <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyber-purple/20 text-purple-300 border border-cyber-purple/40 font-semibold">
@@ -975,7 +1032,7 @@ export default function RegistrationForm({
                           </span>
                         </div>
                         <p className="text-[11px] text-slate-400 font-mono leading-relaxed">
-                          Competitive Free Fire BR arena tournament. Requires exactly 4 registered players (₹400 team + ₹50 charge).
+                          Competitive Free Fire BR arena tournament. Requires exactly 4 registered players (₹400 total).
                         </p>
                       </div>
 
@@ -1155,7 +1212,7 @@ export default function RegistrationForm({
                               <p className="text-xs font-bold font-tech truncate">{ev.name}</p>
                               {isEsports && (
                                 <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-cyber-purple/20 text-purple-300 border border-cyber-purple/40">
-                                  ₹450
+                                  ₹400
                                 </span>
                               )}
                             </div>
@@ -1209,7 +1266,7 @@ export default function RegistrationForm({
                   <div className="flex items-center space-x-2">
                     <Sparkles className="w-5 h-5 text-emerald-400" />
                     <h3 className="font-tech text-base sm:text-lg font-bold text-white uppercase tracking-wider">
-                      3. Food Preference
+                      {isEsportsSelected ? '3. Team Leader Food Preference' : '3. Food Preference'}
                     </h3>
                   </div>
                   <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 uppercase font-semibold">
@@ -1218,7 +1275,9 @@ export default function RegistrationForm({
                 </div>
 
                 <p className="text-xs text-slate-300 font-mono mb-3">
-                  Food and lunch refreshments are provided for all registered participants. Please select your preference below:
+                  {isEsportsSelected
+                    ? 'Select food preference for Player 1 (Team Leader). Teammate food preferences (Players 2, 3, 4) are individually selected in Step 4 below:'
+                    : 'Food and lunch refreshments are provided for all registered participants. Please select your preference below:'}
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1278,6 +1337,12 @@ export default function RegistrationForm({
                     </div>
                   </button>
                 </div>
+                {errors.foodPreference && (
+                  <p className="text-rose-400 text-xs font-mono mt-2 flex items-center">
+                    <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0" />
+                    <span>{errors.foodPreference}</span>
+                  </p>
+                )}
               </div>
 
               {/* STEP 4: TEAM / MEMBER DETAILS (DYNAMIC BASED ON EVENTS & PARTICIPANTS) */}
@@ -1325,18 +1390,27 @@ export default function RegistrationForm({
                   </div>
 
                   {/* Member #1: Team Leader from Step 1 */}
-                  <div className="p-3 rounded-xl bg-space-900/80 border border-cyber-cyan/30 flex items-center justify-between text-xs font-mono">
+                  <div className="p-3.5 rounded-xl bg-space-900/80 border border-cyber-cyan/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-mono">
                     <div className="flex items-center space-x-2">
                       <span className="px-2 py-0.5 rounded bg-cyber-cyan/20 text-cyber-cyan font-bold text-[10px] uppercase">
-                        Member #1 (Leader)
+                        {isEsportsSelected ? 'Player #1 (Team Leader)' : 'Member #1 (Leader)'}
                       </span>
                       <span className="text-white font-semibold">
                         {formData.fullName || 'Leader name entered in Step 1'}
                       </span>
                     </div>
-                    <span className="text-[10px] text-slate-400 font-mono">
-                      {formData.mobile ? `+91 ${formData.mobile}` : 'Contact in Step 1'}
-                    </span>
+                    <div className="flex items-center space-x-3 text-[11px]">
+                      <span className="text-slate-400">
+                        {formData.mobile ? `+91 ${formData.mobile}` : 'Contact in Step 1'}
+                      </span>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                        formData.foodPreference === 'Veg'
+                          ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                          : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                      }`}>
+                        Food: {formData.foodPreference || 'Veg'}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Optional Team Name */}
@@ -1355,45 +1429,110 @@ export default function RegistrationForm({
 
                   {/* Additional Teammate Input Fields (Members 2 to 4) */}
                   {formData.teamMembers.length > 0 && (
-                    <div className="space-y-2.5">
-                      {formData.teamMembers.map((member, idx) => (
-                        <div key={idx} className="p-3 rounded-xl bg-space-900/60 border border-slate-800/80 flex flex-col sm:flex-row items-center gap-2">
-                          <span className="text-xs font-mono font-bold text-cyber-cyan shrink-0">
-                            Member #{idx + 2}
-                          </span>
-                          <input
-                            type="text"
-                            required
-                            placeholder="Member Full Name *"
-                            value={member.name}
-                            onChange={(e) => handleMemberChange(idx, 'name', e.target.value)}
-                            className="w-full sm:flex-1 bg-space-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500"
-                          />
-                          <input
-                            type="email"
-                            placeholder="Email (optional)"
-                            value={member.email}
-                            onChange={(e) => handleMemberChange(idx, 'email', e.target.value)}
-                            className="w-full sm:flex-1 bg-space-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500"
-                          />
-                          <input
-                            type="tel"
-                            maxLength={10}
-                            placeholder="Mobile (optional)"
-                            value={member.mobile}
-                            onChange={(e) => handleMemberChange(idx, 'mobile', e.target.value.replace(/\D/g, ''))}
-                            className="w-full sm:w-32 bg-space-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white font-mono placeholder-slate-500"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveMember(idx)}
-                            className="text-slate-500 hover:text-rose-400 p-1.5 shrink-0"
-                            title="Remove Teammate"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ))}
+                    <div className="space-y-3">
+                      {formData.teamMembers.map((member, idx) => {
+                        const playerNum = idx + 2;
+                        if (isEsportsSelected) {
+                          const currentFood = member.foodPreference || 'Veg';
+                          return (
+                            <div
+                              key={idx}
+                              className="p-3.5 rounded-xl bg-space-900/70 border border-slate-800/90 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 transition-colors hover:border-slate-700"
+                            >
+                              <div className="flex items-center justify-between sm:justify-start space-x-2 shrink-0">
+                                <span className="text-xs font-mono font-bold text-cyber-purple px-2 py-0.5 rounded bg-cyber-purple/15 border border-cyber-purple/30">
+                                  Player #{playerNum}
+                                </span>
+                                <span className="text-[10px] font-mono text-slate-400 sm:hidden">
+                                  Food: {currentFood}
+                                </span>
+                              </div>
+
+                              <div className="flex-1 min-w-0">
+                                <input
+                                  type="text"
+                                  required
+                                  placeholder={`Player #${playerNum} Full Name *`}
+                                  value={member.name}
+                                  onChange={(e) => handleMemberChange(idx, 'name', e.target.value)}
+                                  className="w-full bg-space-950 border border-slate-800 focus:border-cyber-purple rounded-lg px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-cyber-purple transition-all"
+                                />
+                              </div>
+
+                              {/* Food Preference Selector: Veg / Non-Veg */}
+                              <div className="flex items-center space-x-1.5 shrink-0 bg-space-950 p-1 rounded-lg border border-slate-800 self-end sm:self-auto">
+                                <button
+                                  type="button"
+                                  onClick={() => handleMemberChange(idx, 'foodPreference', 'Veg')}
+                                  className={`px-3 py-1.5 rounded-md text-xs font-mono font-semibold transition-all flex items-center space-x-1.5 ${
+                                    currentFood === 'Veg'
+                                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.3)]'
+                                      : 'text-slate-400 hover:text-slate-200 border border-transparent'
+                                  }`}
+                                  title={`Select Vegetarian for Player #${playerNum}`}
+                                >
+                                  <span className={`w-2 h-2 rounded-full ${currentFood === 'Veg' ? 'bg-emerald-400' : 'bg-slate-600'}`}></span>
+                                  <span>Veg</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleMemberChange(idx, 'foodPreference', 'Non-Veg')}
+                                  className={`px-3 py-1.5 rounded-md text-xs font-mono font-semibold transition-all flex items-center space-x-1.5 ${
+                                    currentFood === 'Non-Veg'
+                                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.3)]'
+                                      : 'text-slate-400 hover:text-slate-200 border border-transparent'
+                                  }`}
+                                  title={`Select Non-Vegetarian for Player #${playerNum}`}
+                                >
+                                  <span className={`w-2 h-2 rounded-full ${currentFood === 'Non-Veg' ? 'bg-amber-400' : 'bg-slate-600'}`}></span>
+                                  <span>Non-Veg</span>
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        // Normal non-esports team members (Project Expo, etc.)
+                        return (
+                          <div key={idx} className="p-3 rounded-xl bg-space-900/60 border border-slate-800/80 flex flex-col sm:flex-row items-center gap-2">
+                            <span className="text-xs font-mono font-bold text-cyber-cyan shrink-0">
+                              Member #{playerNum}
+                            </span>
+                            <input
+                              type="text"
+                              required
+                              placeholder="Member Full Name *"
+                              value={member.name}
+                              onChange={(e) => handleMemberChange(idx, 'name', e.target.value)}
+                              className="w-full sm:flex-1 bg-space-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500"
+                            />
+                            <input
+                              type="email"
+                              placeholder="Email (optional)"
+                              value={member.email || ''}
+                              onChange={(e) => handleMemberChange(idx, 'email', e.target.value)}
+                              className="w-full sm:flex-1 bg-space-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500"
+                            />
+                            <input
+                              type="tel"
+                              maxLength={10}
+                              placeholder="Mobile (optional)"
+                              value={member.mobile || ''}
+                              onChange={(e) => handleMemberChange(idx, 'mobile', e.target.value.replace(/\D/g, ''))}
+                              className="w-full sm:w-32 bg-space-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white font-mono placeholder-slate-500"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveMember(idx)}
+                              className="text-slate-500 hover:text-rose-400 p-1.5 shrink-0"
+                              title="Remove Teammate"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
 

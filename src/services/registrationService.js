@@ -107,9 +107,9 @@ export const INITIAL_REGISTRATIONS = [
     year: 'II Year',
     event: 'E-Sports',
     team_members: [
-      { name: 'Dinesh K', email: 'dinesh.k@example.com', mobile: '9789012346' },
-      { name: 'Naveen P', email: 'naveen.p@example.com', mobile: '9789012347' },
-      { name: 'Akash S', email: 'akash.s@example.com', mobile: '9789012348' }
+      { name: 'Dinesh K', food_preference: 'Non-Veg', foodPreference: 'Non-Veg' },
+      { name: 'Naveen P', food_preference: 'Veg', foodPreference: 'Veg' },
+      { name: 'Akash S', food_preference: 'Non-Veg', foodPreference: 'Non-Veg' }
     ],
     utr: '428912349876',
     payment_screenshot: {
@@ -281,7 +281,21 @@ export async function createRegistration({
 
   // Format team members
   const formattedTeamMembers = Array.isArray(teamMembers) 
-    ? teamMembers.filter(m => m && (typeof m === 'string' ? m.trim() : (m.name && m.name.trim())))
+    ? teamMembers
+        .filter(m => m && (typeof m === 'string' ? m.trim() : (m.name && m.name.trim())))
+        .map(m => {
+          if (typeof m === 'string') {
+            return { name: m.trim(), food_preference: 'Veg', foodPreference: 'Veg' };
+          }
+          const foodPref = m.foodPreference || m.food_preference || 'Veg';
+          return {
+            name: m.name.trim(),
+            food_preference: foodPref,
+            foodPreference: foodPref,
+            ...(m.email ? { email: m.email.trim() } : {}),
+            ...(m.mobile ? { mobile: m.mobile.trim() } : {})
+          };
+        })
     : [];
 
   if (flexibleMemberDetails && flexibleMemberDetails.trim()) {
@@ -488,7 +502,15 @@ export function exportRegistrationsToCSV(authSecret) {
 
   const rows = records.map(r => {
     const teamMembersText = Array.isArray(r.team_members) 
-      ? r.team_members.map(m => typeof m === 'string' ? m : `${m.name || ''} (${m.mobile || m.email || ''})`).join('; ')
+      ? r.team_members.map(m => {
+          if (typeof m === 'string') return m;
+          const extras = [];
+          const food = m.food_preference || m.foodPreference;
+          if (food) extras.push(`Food: ${food}`);
+          if (m.mobile) extras.push(`Mobile: ${m.mobile}`);
+          if (m.email) extras.push(`Email: ${m.email}`);
+          return extras.length > 0 ? `${m.name || ''} (${extras.join(', ')})` : (m.name || '');
+        }).join('; ')
       : '';
 
     return [

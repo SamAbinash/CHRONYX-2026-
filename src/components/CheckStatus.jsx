@@ -250,7 +250,11 @@ export default function CheckStatus({ activeSearchQuery, onViewPass }) {
                       <span className="text-cyber-purple font-bold block mb-1">Team Name: {result.teamName}</span>
                       {result.teamMembers && result.teamMembers.length > 0 && (
                         <div className="text-slate-400 text-[11px]">
-                          Members: {result.teamMembers.map(m => m.name).filter(Boolean).join(', ')}
+                          Members: {result.teamMembers.map(m => {
+                            if (!m) return '';
+                            const pref = m.foodPreference || m.food_preference;
+                            return pref ? `${m.name || m} (${pref})` : (m.name || m);
+                          }).filter(Boolean).join(', ')}
                         </div>
                       )}
                     </div>

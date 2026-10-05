@@ -96,6 +96,32 @@ export default function PassModal({ registration, onClose }) {
                 </p>
               </div>
             )}
+
+            {/* Team Roster & Food Preferences */}
+            {registration.teamMembers && registration.teamMembers.length > 0 ? (
+              <div className="p-2.5 rounded-xl bg-space-950/70 border border-slate-800/80 print:border-black text-[11px] font-mono">
+                <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-1 print:text-gray-600 font-bold">
+                  Roster & Food Preference
+                </p>
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-slate-300 print:text-black">
+                    <span>1. {registration.name} (Leader)</span>
+                    <span className="text-cyber-cyan print:text-black font-semibold">{registration.foodPreference || registration.food_preference || 'Veg'}</span>
+                  </div>
+                  {registration.teamMembers.map((m, idx) => (
+                    <div key={idx} className="flex items-center justify-between text-slate-300 print:text-black">
+                      <span>{idx + 2}. {m.name || m}</span>
+                      <span className="text-cyber-purple print:text-black font-semibold">{m.foodPreference || m.food_preference || 'Veg'}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between text-xs font-mono text-slate-300 print:text-black pt-1">
+                <span className="text-[10px] text-slate-400 uppercase print:text-gray-600">Food Preference:</span>
+                <span className="text-emerald-400 print:text-black font-bold uppercase">{registration.foodPreference || registration.food_preference || 'Veg'}</span>
+              </div>
+            )}
           </div>
 
           {/* Date, Time & Venue */}
