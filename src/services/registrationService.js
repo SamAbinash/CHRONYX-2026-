@@ -28,6 +28,7 @@ import {
   idbGetScreenshot, 
   idbGetAllRegistrations 
 } from './indexedDbHelper.js';
+import { saveRegistrationToGoogleSheet } from './googleSheetService.js';
 
 const STORAGE_KEY = 'chronyx_2026_registrations_v2';
 const SEQ_COUNTER_KEY = 'chronyx_2026_reg_seq_counter';
@@ -366,9 +367,29 @@ export async function createRegistration({
   }
 
   // 2. Save to IndexedDB
-  await idbSaveRegistration(registrationRecord);
+await idbSaveRegistration(registrationRecord);
+// Save registration to Google Sheet
+try {
+  await saveRegistrationToGoogleSheet(registrationRecord);
+  console.log('Registration saved to Google Sheet');
+} catch (err) {
+  console.error('Google Sheet save failed:', err);
+}
+// 3. Save to Supabase
+try {
+  const { error } = await supabase
+    .from('registrations')
+    .upsert(registrationRecord, {
+      onConflict: 'registration_id'
+    });
 
-  // Return enhanced record for immediate UI confirmation
+  if (error) {
+    console.error('Supabase registration save failed:', error);
+  }
+} catch (err) {
+  console.error('Supabase connection failed:', err);
+}
+    // Return enhanced record for immediate UI confirmation
   return enhanceRecord(registrationRecord);
 }
 
@@ -499,7 +520,6 @@ export function exportRegistrationsToCSV(authSecret) {
     const s = String(str).replace(/"/g, '""');
     return `"${s}"`;
   };
-
   const rows = records.map(r => {
     const teamMembersText = Array.isArray(r.team_members) 
       ? r.team_members.map(m => {
