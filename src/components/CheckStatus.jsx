@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { getPublicRegistrationStatus } from '../services/registrationService';
-import { 
-  Search, ShieldCheck, CheckCircle2, Clock, AlertOctagon, Send, Ticket, 
-  ExternalLink, User, Building, Layers, Sparkles 
+import { getRegistrationStatusFromGoogleSheet } from '../services/googleSheetService';
+import {
+  Search, ShieldCheck, CheckCircle2, Clock, AlertOctagon, Send, Ticket,
+  ExternalLink, User, Building, Layers, Sparkles
 } from 'lucide-react';
 
 const STATUS_CONFIG = {
@@ -53,13 +54,95 @@ export default function CheckStatus({ activeSearchQuery, onViewPass }) {
     }
   }, [activeSearchQuery]);
 
-  const handleSearch = (queryToUse) => {
+  const handleSearch = async (queryToUse) => {
     const q = queryToUse !== undefined ? queryToUse : searchQuery;
     if (!q.trim()) return;
 
     setHasSearched(true);
-    const found = getPublicRegistrationStatus(q);
-    setResult(found || null);
+    setResult(null);
+
+    try {
+      const liveRecord = await getRegistrationStatusFromGoogleSheet(q);
+
+      if (liveRecord) {
+        let teamMembers = [];
+
+        if (Array.isArray(liveRecord.team_members)) {
+          teamMembers = liveRecord.team_members;
+        } else if (
+          typeof liveRecord.team_members === 'string' &&
+          liveRecord.team_members.trim()
+        ) {
+          try {
+            teamMembers = JSON.parse(liveRecord.team_members);
+          } catch {
+            teamMembers = [];
+          }
+        }
+
+        const eventArray = Array.isArray(liveRecord.event)
+          ? liveRecord.event
+          : String(liveRecord.event || '')
+            .split(',')
+            .map((event) => event.trim())
+            .filter(Boolean);
+
+        const publicRecord = {
+          registration_id: liveRecord.registration_id,
+          regId: liveRecord.registration_id,
+
+          full_name: liveRecord.full_name,
+          name: liveRecord.full_name,
+
+          event: liveRecord.event || '',
+          events: eventArray,
+
+          status: liveRecord.status,
+
+          college: liveRecord.college,
+          department: liveRecord.department,
+          year: liveRecord.year,
+
+          team_members: teamMembers,
+          teamMembers: teamMembers,
+          teamName: liveRecord.team_name || '',
+          teamType: teamMembers.length > 0 ? 'Team' : 'Individual',
+
+          created_at: liveRecord.created_at,
+          submittedAt: liveRecord.created_at
+            ? new Date(liveRecord.created_at).toLocaleDateString('en-GB', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true
+            })
+            : '',
+
+          remarks:
+            liveRecord.remarks ||
+            'Status active in symposium records.'
+        };
+
+        setResult(publicRecord);
+        return;
+      }
+
+      // Fallback to local demo records
+      const localRecord = getPublicRegistrationStatus(q);
+      setResult(localRecord || null);
+
+    } catch (error) {
+      console.error(
+        'Live Google Sheet status lookup failed:',
+        error
+      );
+
+      // Fallback to local demo records
+      const localRecord = getPublicRegistrationStatus(q);
+      setResult(localRecord || null);
+    }
   };
 
   const handleQuickDemoClick = (id) => {
@@ -72,14 +155,14 @@ export default function CheckStatus({ activeSearchQuery, onViewPass }) {
 
   return (
     <section id="status" className="relative py-24 bg-transparent overflow-hidden">
-      
+
       {/* Background Ambience */}
       <div className="absolute inset-0 bg-grid-cyber pointer-events-none opacity-20"></div>
       <div className="absolute bottom-1/3 left-1/3 w-96 h-96 bg-cyber-blue/10 rounded-full blur-[160px] pointer-events-none"></div>
       <div className="absolute top-1/4 right-10 w-80 h-80 bg-rose-600/8 rounded-full blur-[150px] pointer-events-none"></div>
 
       <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto mb-12">
           <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full cyber-glass border border-cyber-cyan/30 text-cyber-cyan text-xs font-mono uppercase tracking-widest mb-4">
@@ -112,7 +195,7 @@ export default function CheckStatus({ activeSearchQuery, onViewPass }) {
             </span>
           </div>
 
-          <form 
+          <form
             onSubmit={(e) => { e.preventDefault(); handleSearch(); }}
             className="flex flex-col sm:flex-row gap-3"
           >
@@ -186,7 +269,7 @@ export default function CheckStatus({ activeSearchQuery, onViewPass }) {
           <div>
             {result ? (
               <div className={`cyber-glass rounded-3xl p-6 sm:p-8 border ${statusInfo.border} ${statusInfo.glow} relative overflow-hidden transition-all duration-300`}>
-                
+
                 {/* Status Header Badge */}
                 <div className="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-slate-800">
                   <div>
@@ -208,7 +291,7 @@ export default function CheckStatus({ activeSearchQuery, onViewPass }) {
 
                 {/* Details Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-6 border-b border-slate-800 text-xs font-mono">
-                  
+
                   {/* Participant Name */}
                   <div>
                     <span className="text-slate-400 block mb-0.5">Participant Name</span>

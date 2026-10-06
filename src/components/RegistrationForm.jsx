@@ -65,10 +65,10 @@ export default function RegistrationForm({
   const maxAllowedTotalMembers = isEsportsSelected
     ? 4
     : isProjectExpoSelected && !isEsportsSelected
-    ? 2
-    : selectedNormalEvents.length > 0
-    ? maxNormalAllowed
-    : 4;
+      ? 2
+      : selectedNormalEvents.length > 0
+        ? maxNormalAllowed
+        : 4;
 
   const isTeam = formData.teamMembers.length > 0 || isEsportsSelected || isProjectExpoSelected || formData.registrationType === 'team';
   const participantCount = isTeam ? (1 + formData.teamMembers.length) : 1;
@@ -465,9 +465,10 @@ export default function RegistrationForm({
         college: formData.college,
         department: formData.department,
         year: formData.year,
+        selectedEvents: formData.selectedEvents,
         teamMembers: formData.teamMembers
-          .filter(m => m.name && m.name.trim() !== '')
-          .map(m => ({
+          .filter((m) => m.name && m.name.trim() !== '')
+          .map((m) => ({
             name: m.name.trim(),
             foodPreference: m.foodPreference || 'Veg',
             food_preference: m.foodPreference || 'Veg',
@@ -820,9 +821,8 @@ export default function RegistrationForm({
                         setFormData({ ...formData, fullName: e.target.value });
                         if (errors.fullName) setErrors({ ...errors, fullName: null });
                       }}
-                      className={`w-full bg-space-950 border rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 transition-all ${
-                        errors.fullName ? 'border-rose-500 focus:ring-rose-500' : 'border-slate-800 focus:border-cyber-cyan focus:ring-cyber-cyan'
-                      }`}
+                      className={`w-full bg-space-950 border rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 transition-all ${errors.fullName ? 'border-rose-500 focus:ring-rose-500' : 'border-slate-800 focus:border-cyber-cyan focus:ring-cyber-cyan'
+                        }`}
                     />
                     {errors.fullName && <p className="text-rose-400 text-xs font-mono mt-1">{errors.fullName}</p>}
                   </div>
@@ -841,9 +841,8 @@ export default function RegistrationForm({
                         setFormData({ ...formData, email: e.target.value });
                         if (errors.email) setErrors({ ...errors, email: null });
                       }}
-                      className={`w-full bg-space-950 border rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 transition-all ${
-                        errors.email ? 'border-rose-500 focus:ring-rose-500' : 'border-slate-800 focus:border-cyber-cyan focus:ring-cyber-cyan'
-                      }`}
+                      className={`w-full bg-space-950 border rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 transition-all ${errors.email ? 'border-rose-500 focus:ring-rose-500' : 'border-slate-800 focus:border-cyber-cyan focus:ring-cyber-cyan'
+                        }`}
                     />
                     {errors.email && <p className="text-rose-400 text-xs font-mono mt-1">{errors.email}</p>}
                   </div>
@@ -864,9 +863,8 @@ export default function RegistrationForm({
                         setFormData({ ...formData, mobile: val });
                         if (errors.mobile) setErrors({ ...errors, mobile: null });
                       }}
-                      className={`w-full bg-space-950 border rounded-xl px-4 py-2.5 text-sm text-white font-mono placeholder-slate-500 focus:outline-none focus:ring-1 transition-all ${
-                        errors.mobile ? 'border-rose-500 focus:ring-rose-500' : 'border-slate-800 focus:border-cyber-cyan focus:ring-cyber-cyan'
-                      }`}
+                      className={`w-full bg-space-950 border rounded-xl px-4 py-2.5 text-sm text-white font-mono placeholder-slate-500 focus:outline-none focus:ring-1 transition-all ${errors.mobile ? 'border-rose-500 focus:ring-rose-500' : 'border-slate-800 focus:border-cyber-cyan focus:ring-cyber-cyan'
+                        }`}
                     />
                     {errors.mobile && <p className="text-rose-400 text-xs font-mono mt-1">{errors.mobile}</p>}
                   </div>
@@ -902,9 +900,8 @@ export default function RegistrationForm({
                         setFormData({ ...formData, college: e.target.value });
                         if (errors.college) setErrors({ ...errors, college: null });
                       }}
-                      className={`w-full bg-space-950 border rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 transition-all ${
-                        errors.college ? 'border-rose-500 focus:ring-rose-500' : 'border-slate-800 focus:border-cyber-cyan focus:ring-cyber-cyan'
-                      }`}
+                      className={`w-full bg-space-950 border rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 transition-all ${errors.college ? 'border-rose-500 focus:ring-rose-500' : 'border-slate-800 focus:border-cyber-cyan focus:ring-cyber-cyan'
+                        }`}
                     />
                     {errors.college && <p className="text-rose-400 text-xs font-mono mt-1">{errors.college}</p>}
                   </div>
@@ -923,9 +920,8 @@ export default function RegistrationForm({
                         setFormData({ ...formData, department: e.target.value });
                         if (errors.department) setErrors({ ...errors, department: null });
                       }}
-                      className={`w-full bg-space-950 border rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 transition-all ${
-                        errors.department ? 'border-rose-500 focus:ring-rose-500' : 'border-slate-800 focus:border-cyber-cyan focus:ring-cyber-cyan'
-                      }`}
+                      className={`w-full bg-space-950 border rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 transition-all ${errors.department ? 'border-rose-500 focus:ring-rose-500' : 'border-slate-800 focus:border-cyber-cyan focus:ring-cyber-cyan'
+                        }`}
                     />
                     {errors.department && <p className="text-rose-400 text-xs font-mono mt-1">{errors.department}</p>}
                   </div>
@@ -964,11 +960,10 @@ export default function RegistrationForm({
                     <button
                       type="button"
                       onClick={handleSelectIndividual}
-                      className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between group ${
-                        !isEsportsSelected && !isProjectExpoSelected && formData.teamMembers.length === 0
-                          ? 'bg-cyber-cyan/15 border-cyber-cyan shadow-[0_0_20px_rgba(0,240,255,0.25)] text-white'
-                          : 'bg-space-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
-                      }`}
+                      className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between group ${!isEsportsSelected && !isProjectExpoSelected && formData.teamMembers.length === 0
+                        ? 'bg-cyber-cyan/15 border-cyber-cyan shadow-[0_0_20px_rgba(0,240,255,0.25)] text-white'
+                        : 'bg-space-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
+                        }`}
                     >
                       <div>
                         <div className="flex items-center justify-between w-full mb-2">
@@ -992,11 +987,10 @@ export default function RegistrationForm({
                         <span className={!isEsportsSelected && !isProjectExpoSelected && formData.teamMembers.length === 0 ? 'text-cyber-cyan font-bold' : 'text-slate-500'}>
                           {!isEsportsSelected && !isProjectExpoSelected && formData.teamMembers.length === 0 ? '✓ Selected (1 Person)' : 'Click to Select'}
                         </span>
-                        <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border ${
-                          !isEsportsSelected && !isProjectExpoSelected && formData.teamMembers.length === 0
-                            ? 'bg-cyber-cyan border-cyber-cyan text-space-950'
-                            : 'border-slate-700'
-                        }`}>
+                        <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border ${!isEsportsSelected && !isProjectExpoSelected && formData.teamMembers.length === 0
+                          ? 'bg-cyber-cyan border-cyber-cyan text-space-950'
+                          : 'border-slate-700'
+                          }`}>
                           {!isEsportsSelected && !isProjectExpoSelected && formData.teamMembers.length === 0 && (
                             <CheckCircle2 className="w-4 h-4" />
                           )}
@@ -1008,11 +1002,10 @@ export default function RegistrationForm({
                     <button
                       type="button"
                       onClick={() => toggleEvent('E-Sports')}
-                      className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between group ${
-                        isEsportsSelected
-                          ? 'bg-cyber-purple/25 border-cyber-purple shadow-[0_0_25px_rgba(168,85,247,0.35)] text-white'
-                          : 'bg-space-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
-                      }`}
+                      className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between group ${isEsportsSelected
+                        ? 'bg-cyber-purple/25 border-cyber-purple shadow-[0_0_25px_rgba(168,85,247,0.35)] text-white'
+                        : 'bg-space-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
+                        }`}
                     >
                       <div>
                         <div className="flex items-center justify-between w-full mb-2">
@@ -1040,9 +1033,8 @@ export default function RegistrationForm({
                         <span className={isEsportsSelected ? 'text-cyber-purple font-bold' : 'text-slate-500'}>
                           {isEsportsSelected ? '✓ Selected (4 Members Required)' : 'Click to Select'}
                         </span>
-                        <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border ${
-                          isEsportsSelected ? 'bg-cyber-purple border-cyber-purple text-space-950' : 'border-slate-700'
-                        }`}>
+                        <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border ${isEsportsSelected ? 'bg-cyber-purple border-cyber-purple text-space-950' : 'border-slate-700'
+                          }`}>
                           {isEsportsSelected && <CheckCircle2 className="w-4 h-4" />}
                         </div>
                       </div>
@@ -1052,11 +1044,10 @@ export default function RegistrationForm({
                     <button
                       type="button"
                       onClick={() => toggleEvent('Project Expo')}
-                      className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between group ${
-                        isProjectExpoSelected
-                          ? 'bg-cyber-cyan/20 border-cyber-cyan shadow-[0_0_25px_rgba(0,240,255,0.3)] text-white'
-                          : 'bg-space-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
-                      }`}
+                      className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between group ${isProjectExpoSelected
+                        ? 'bg-cyber-cyan/20 border-cyber-cyan shadow-[0_0_25px_rgba(0,240,255,0.3)] text-white'
+                        : 'bg-space-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
+                        }`}
                     >
                       <div>
                         <div className="flex items-center justify-between w-full mb-2">
@@ -1080,9 +1071,8 @@ export default function RegistrationForm({
                         <span className={isProjectExpoSelected ? 'text-cyber-cyan font-bold' : 'text-slate-500'}>
                           {isProjectExpoSelected ? '✓ Selected (2 Members Required)' : 'Click to Select'}
                         </span>
-                        <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border ${
-                          isProjectExpoSelected ? 'bg-cyber-cyan border-cyber-cyan text-space-950' : 'border-slate-700'
-                        }`}>
+                        <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border ${isProjectExpoSelected ? 'bg-cyber-cyan border-cyber-cyan text-space-950' : 'border-slate-700'
+                          }`}>
                           {isProjectExpoSelected && <CheckCircle2 className="w-4 h-4" />}
                         </div>
                       </div>
@@ -1092,11 +1082,10 @@ export default function RegistrationForm({
                     <button
                       type="button"
                       onClick={() => setFormData(prev => ({ ...prev, bookStall: !prev.bookStall }))}
-                      className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between group ${
-                        formData.bookStall
-                          ? 'bg-sky-500/20 border-sky-400 shadow-[0_0_25px_rgba(56,189,248,0.3)] text-white'
-                          : 'bg-space-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
-                      }`}
+                      className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between group ${formData.bookStall
+                        ? 'bg-sky-500/20 border-sky-400 shadow-[0_0_25px_rgba(56,189,248,0.3)] text-white'
+                        : 'bg-space-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
+                        }`}
                     >
                       <div>
                         <div className="flex items-center justify-between w-full mb-2">
@@ -1120,9 +1109,8 @@ export default function RegistrationForm({
                         <span className={formData.bookStall ? 'text-sky-400 font-bold' : 'text-slate-500'}>
                           {formData.bookStall ? '✓ Booked (+₹150 to total)' : 'Click to Add Stall'}
                         </span>
-                        <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border ${
-                          formData.bookStall ? 'bg-sky-400 border-sky-400 text-space-950' : 'border-slate-700'
-                        }`}>
+                        <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border ${formData.bookStall ? 'bg-sky-400 border-sky-400 text-space-950' : 'border-slate-700'
+                          }`}>
                           {formData.bookStall && <CheckCircle2 className="w-4 h-4" />}
                         </div>
                       </div>
@@ -1157,11 +1145,10 @@ export default function RegistrationForm({
                           type="button"
                           key={ev.id}
                           onClick={() => toggleEvent(ev.name)}
-                          className={`p-3 rounded-xl text-left border transition-all flex items-center justify-between ${
-                            isSelected
-                              ? 'bg-cyber-cyan/15 border-cyber-cyan shadow-[0_0_15px_rgba(0,240,255,0.2)] text-white'
-                              : 'bg-space-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
-                          }`}
+                          className={`p-3 rounded-xl text-left border transition-all flex items-center justify-between ${isSelected
+                            ? 'bg-cyber-cyan/15 border-cyber-cyan shadow-[0_0_15px_rgba(0,240,255,0.2)] text-white'
+                            : 'bg-space-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
+                            }`}
                         >
                           <div className="overflow-hidden pr-2">
                             <div className="flex items-center space-x-1.5 flex-wrap">
@@ -1176,9 +1163,8 @@ export default function RegistrationForm({
                               {ev.memberCount || 'Technical'}
                             </p>
                           </div>
-                          <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border ${
-                            isSelected ? 'bg-cyber-cyan border-cyber-cyan text-space-950' : 'border-slate-700'
-                          }`}>
+                          <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border ${isSelected ? 'bg-cyber-cyan border-cyber-cyan text-space-950' : 'border-slate-700'
+                            }`}>
                             {isSelected && <CheckCircle2 className="w-4 h-4" />}
                           </div>
                         </button>
@@ -1201,11 +1187,10 @@ export default function RegistrationForm({
                           type="button"
                           key={ev.id}
                           onClick={() => toggleEvent(ev.name)}
-                          className={`p-3 rounded-xl text-left border transition-all flex items-center justify-between ${
-                            isSelected
-                              ? 'bg-cyber-purple/20 border-cyber-purple shadow-[0_0_15px_rgba(168,85,247,0.3)] text-white'
-                              : 'bg-space-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
-                          }`}
+                          className={`p-3 rounded-xl text-left border transition-all flex items-center justify-between ${isSelected
+                            ? 'bg-cyber-purple/20 border-cyber-purple shadow-[0_0_15px_rgba(168,85,247,0.3)] text-white'
+                            : 'bg-space-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
+                            }`}
                         >
                           <div className="overflow-hidden pr-2">
                             <div className="flex items-center space-x-1.5 flex-wrap">
@@ -1220,9 +1205,8 @@ export default function RegistrationForm({
                               {ev.memberCount || 'Non-Technical'}
                             </p>
                           </div>
-                          <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border ${
-                            isSelected ? 'bg-cyber-purple border-cyber-purple text-space-950' : 'border-slate-700'
-                          }`}>
+                          <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border ${isSelected ? 'bg-cyber-purple border-cyber-purple text-space-950' : 'border-slate-700'
+                            }`}>
                             {isSelected && <CheckCircle2 className="w-4 h-4" />}
                           </div>
                         </button>
@@ -1285,11 +1269,10 @@ export default function RegistrationForm({
                   <button
                     type="button"
                     onClick={() => setFormData({ ...formData, foodPreference: 'Veg' })}
-                    className={`p-4 rounded-2xl border text-left transition-all flex items-center justify-between ${
-                      formData.foodPreference === 'Veg'
-                        ? 'bg-emerald-500/15 border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.25)] text-white'
-                        : 'bg-space-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
-                    }`}
+                    className={`p-4 rounded-2xl border text-left transition-all flex items-center justify-between ${formData.foodPreference === 'Veg'
+                      ? 'bg-emerald-500/15 border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.25)] text-white'
+                      : 'bg-space-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
+                      }`}
                   >
                     <div>
                       <div className="flex items-center space-x-2">
@@ -1302,9 +1285,8 @@ export default function RegistrationForm({
                         Full vegetarian meal & refreshments
                       </p>
                     </div>
-                    <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border ${
-                      formData.foodPreference === 'Veg' ? 'bg-emerald-400 border-emerald-400 text-space-950' : 'border-slate-700'
-                    }`}>
+                    <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border ${formData.foodPreference === 'Veg' ? 'bg-emerald-400 border-emerald-400 text-space-950' : 'border-slate-700'
+                      }`}>
                       {formData.foodPreference === 'Veg' && <CheckCircle2 className="w-4 h-4" />}
                     </div>
                   </button>
@@ -1313,11 +1295,10 @@ export default function RegistrationForm({
                   <button
                     type="button"
                     onClick={() => setFormData({ ...formData, foodPreference: 'Non-Veg' })}
-                    className={`p-4 rounded-2xl border text-left transition-all flex items-center justify-between ${
-                      formData.foodPreference === 'Non-Veg'
-                        ? 'bg-amber-500/15 border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.25)] text-white'
-                        : 'bg-space-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
-                    }`}
+                    className={`p-4 rounded-2xl border text-left transition-all flex items-center justify-between ${formData.foodPreference === 'Non-Veg'
+                      ? 'bg-amber-500/15 border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.25)] text-white'
+                      : 'bg-space-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
+                      }`}
                   >
                     <div>
                       <div className="flex items-center space-x-2">
@@ -1330,9 +1311,8 @@ export default function RegistrationForm({
                         Full non-vegetarian meal & refreshments
                       </p>
                     </div>
-                    <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border ${
-                      formData.foodPreference === 'Non-Veg' ? 'bg-amber-400 border-amber-400 text-space-950' : 'border-slate-700'
-                    }`}>
+                    <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border ${formData.foodPreference === 'Non-Veg' ? 'bg-amber-400 border-amber-400 text-space-950' : 'border-slate-700'
+                      }`}>
                       {formData.foodPreference === 'Non-Veg' && <CheckCircle2 className="w-4 h-4" />}
                     </div>
                   </button>
@@ -1359,10 +1339,10 @@ export default function RegistrationForm({
                         {isEsportsSelected
                           ? 'E-Sports tournament requires exactly 4 players (1 Team Leader + 3 Teammates).'
                           : isProjectExpoSelected
-                          ? 'Project Expo requires exactly 2 members (1 Team Leader + 1 Teammate).'
-                          : selectedNormalEvents.length > 0
-                          ? `Selected event allows ${minNormalRequired === maxNormalAllowed ? maxNormalAllowed : `${minNormalRequired} to ${maxNormalAllowed}`} members (${participantCount} registered @ ₹100 each = ₹${participantCount * 100}).`
-                          : `Team registration: ${participantCount} members (₹100 per member = ₹${participantCount * 100}).`}
+                            ? 'Project Expo requires exactly 2 members (1 Team Leader + 1 Teammate).'
+                            : selectedNormalEvents.length > 0
+                              ? `Selected event allows ${minNormalRequired === maxNormalAllowed ? maxNormalAllowed : `${minNormalRequired} to ${maxNormalAllowed}`} members (${participantCount} registered @ ₹100 each = ₹${participantCount * 100}).`
+                              : `Team registration: ${participantCount} members (₹100 per member = ₹${participantCount * 100}).`}
                       </p>
                     </div>
 
@@ -1381,10 +1361,10 @@ export default function RegistrationForm({
                         {isEsportsSelected
                           ? 'Team Limit: 4 Players'
                           : isProjectExpoSelected && !isEsportsSelected
-                          ? 'Team Limit: 2 Members'
-                          : formData.teamMembers.length + 1 >= maxAllowedTotalMembers
-                          ? `Max ${maxAllowedTotalMembers} Members Reached`
-                          : 'Add Teammate (+₹100)'}
+                            ? 'Team Limit: 2 Members'
+                            : formData.teamMembers.length + 1 >= maxAllowedTotalMembers
+                              ? `Max ${maxAllowedTotalMembers} Members Reached`
+                              : 'Add Teammate (+₹100)'}
                       </span>
                     </button>
                   </div>
@@ -1403,11 +1383,10 @@ export default function RegistrationForm({
                       <span className="text-slate-400">
                         {formData.mobile ? `+91 ${formData.mobile}` : 'Contact in Step 1'}
                       </span>
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                        formData.foodPreference === 'Veg'
-                          ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                          : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
-                      }`}>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${formData.foodPreference === 'Veg'
+                        ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                        : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                        }`}>
                         Food: {formData.foodPreference || 'Veg'}
                       </span>
                     </div>
@@ -1464,11 +1443,10 @@ export default function RegistrationForm({
                                 <button
                                   type="button"
                                   onClick={() => handleMemberChange(idx, 'foodPreference', 'Veg')}
-                                  className={`px-3 py-1.5 rounded-md text-xs font-mono font-semibold transition-all flex items-center space-x-1.5 ${
-                                    currentFood === 'Veg'
-                                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.3)]'
-                                      : 'text-slate-400 hover:text-slate-200 border border-transparent'
-                                  }`}
+                                  className={`px-3 py-1.5 rounded-md text-xs font-mono font-semibold transition-all flex items-center space-x-1.5 ${currentFood === 'Veg'
+                                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.3)]'
+                                    : 'text-slate-400 hover:text-slate-200 border border-transparent'
+                                    }`}
                                   title={`Select Vegetarian for Player #${playerNum}`}
                                 >
                                   <span className={`w-2 h-2 rounded-full ${currentFood === 'Veg' ? 'bg-emerald-400' : 'bg-slate-600'}`}></span>
@@ -1478,11 +1456,10 @@ export default function RegistrationForm({
                                 <button
                                   type="button"
                                   onClick={() => handleMemberChange(idx, 'foodPreference', 'Non-Veg')}
-                                  className={`px-3 py-1.5 rounded-md text-xs font-mono font-semibold transition-all flex items-center space-x-1.5 ${
-                                    currentFood === 'Non-Veg'
-                                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.3)]'
-                                      : 'text-slate-400 hover:text-slate-200 border border-transparent'
-                                  }`}
+                                  className={`px-3 py-1.5 rounded-md text-xs font-mono font-semibold transition-all flex items-center space-x-1.5 ${currentFood === 'Non-Veg'
+                                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.3)]'
+                                    : 'text-slate-400 hover:text-slate-200 border border-transparent'
+                                    }`}
                                   title={`Select Non-Vegetarian for Player #${playerNum}`}
                                 >
                                   <span className={`w-2 h-2 rounded-full ${currentFood === 'Non-Veg' ? 'bg-amber-400' : 'bg-slate-600'}`}></span>

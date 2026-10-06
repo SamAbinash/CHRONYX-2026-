@@ -272,7 +272,6 @@ export async function createRegistration({
   registrationType = 'individual',
   bookStall = false
 }) {
-  const regId = generateNextRegistrationId();
   const createdAtIso = new Date().toISOString();
 
   // Normalize event string / array
@@ -306,6 +305,45 @@ export async function createRegistration({
     });
   }
 
+  // Base payload sent to Google Apps Script backend without relying on a browser-generated ID
+  const registrationPayload = {
+    full_name: fullName.trim(),
+    email: email.trim(),
+    phone: phone.trim(),
+    college: college.trim(),
+    department: department.trim(),
+    year: year || 'III Year',
+    event: eventString,
+    team_members: formattedTeamMembers,
+    team_name: (teamName || '').trim(),
+    food_preference: foodPreference || 'Veg',
+    utr: utr.trim(),
+    status: STATUS_VALUES.VERIFICATION_PENDING,
+    created_at: createdAtIso,
+    remarks: 'Registration submitted successfully. Payment verification is pending.',
+    amount: Number(amount) || 0,
+    registration_type: registrationType || 'individual',
+    stall_booking: Boolean(bookStall)
+  };
+
+  // 1. Submit to Google Apps Script backend as single source of truth for registration ID
+  let regId = null;
+  try {
+    const sheetResponse = await saveRegistrationToGoogleSheet(registrationPayload);
+    if (sheetResponse && (sheetResponse.registration_id || sheetResponse.data?.registration_id)) {
+      regId = sheetResponse.registration_id || sheetResponse.data?.registration_id;
+      console.log('Registration saved to Google Sheet with central ID:', regId);
+    }
+  } catch (err) {
+    console.error('Google Sheet save failed:', err);
+    throw new Error('Registration could not be submitted to the server. Please try again.');
+  }
+
+  // If backend did not return a valid registration ID, treat registration as failed
+  if (!regId) {
+    throw new Error('Registration could not be submitted to the server. Please try again.');
+  }
+
   // Secure payment screenshot preparation
   let screenshotMeta = null;
   let screenshotDataUrl = null;
@@ -327,36 +365,20 @@ export async function createRegistration({
     });
   }
 
-  // Exact data structure
+  // Exact data structure with centrally verified registration_id
   const registrationRecord = {
+    ...registrationPayload,
     registration_id: regId,
-    full_name: fullName.trim(),
-    email: email.trim(),
-    phone: phone.trim(),
-    college: college.trim(),
-    department: department.trim(),
-    year: year || 'III Year',
-    event: eventString,
-    team_members: formattedTeamMembers,
-    team_name: (teamName || '').trim(),
-    food_preference: foodPreference || 'Veg',
-    utr: utr.trim(),
     payment_screenshot: screenshotMeta || {
       filename: 'pending_attachment',
       file_type: 'none',
       file_size: 0,
       storage_path: null,
       uploaded_at: createdAtIso
-    },
-    status: STATUS_VALUES.VERIFICATION_PENDING,
-    created_at: createdAtIso,
-    remarks: 'Registration submitted successfully. Payment verification is pending.',
-    amount: Number(amount) || 0,
-    registration_type: registrationType || 'individual',
-    stall_booking: Boolean(bookStall)
+    }
   };
 
-  // 1. Save to LocalStorage
+  // 2. Save to LocalStorage
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     const existing = raw ? JSON.parse(raw) : INITIAL_REGISTRATIONS;
@@ -366,30 +388,10 @@ export async function createRegistration({
     console.warn('LocalStorage save failed, using memory/IndexedDB', err);
   }
 
-  // 2. Save to IndexedDB
-await idbSaveRegistration(registrationRecord);
-// Save registration to Google Sheet
-try {
-  await saveRegistrationToGoogleSheet(registrationRecord);
-  console.log('Registration saved to Google Sheet');
-} catch (err) {
-  console.error('Google Sheet save failed:', err);
-}
-// 3. Save to Supabase
-try {
-  const { error } = await supabase
-    .from('registrations')
-    .upsert(registrationRecord, {
-      onConflict: 'registration_id'
-    });
+  // 3. Save to IndexedDB
+  await idbSaveRegistration(registrationRecord);
 
-  if (error) {
-    console.error('Supabase registration save failed:', error);
-  }
-} catch (err) {
-  console.error('Supabase connection failed:', err);
-}
-    // Return enhanced record for immediate UI confirmation
+  // Return enhanced record for immediate UI confirmation
   return enhanceRecord(registrationRecord);
 }
 
